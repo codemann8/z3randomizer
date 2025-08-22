@@ -538,6 +538,8 @@ JML GTCutscene_ConditionalAnimateCrystals
 org $88CE93
 GTCutscene_DrawSingleCrystal:
 JML GTCutscene_ConditionalDrawSingleCrystal
+org $88CED1
+JSL AncillaDraw_GTCutsceneCrystal_OAMPrep : BRA + : NOP #3 : +
 ;--------------------------------------------------------------------------------
 org $88CF19 ; <- 44F19 - ancilla_break_tower_seal.asm : 336 (TXA : AND.b #$07 : TAX)
 JSL GTCutscene_ActivateSparkle_SelectCrystal
@@ -2660,7 +2662,7 @@ org $898AEE : JSL TransferItemReceiptToBuffer_using_GraphicsID
 org $898C85 : JSL TransferItemReceiptToBuffer_using_GraphicsID
 
 ; gt cutscene
-org $899BBE : JSL TransferItemReceiptToBuffer_using_GraphicsID
+org $899BBE : JSL GTCutscene_TransferGfx
 
 ;===================================================================================================
 ; gratuitous NOPs removed for speed

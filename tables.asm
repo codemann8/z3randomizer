@@ -922,8 +922,13 @@ dw $0000                ; #$00 = Off (default)
                         ; #$09 = Require All Dungeons No Agahnim
                         ; #$0A = Require 100% Item Collection
                         ; #$0B = Require 100% Item Collection and All Dungeons
+GanonsTowerOpenGfx:     ; 0x1801AA-0x1801AB
+dw $0000                ; Gfx used for GT open animation, similar to StandingItemGraphicsOffsets
+GanonsTowerOpenPalette: ; 0x1801AC
+db $00                  ; Palette for GanonsTowerOpenGfx
+;VHPP   CCC O
 ;--------------------------------------------------------------------------------
-; 0x18019A - 0x1801FF (unused)
+; 0x1801AD - 0x1801FF (unused)
 ;================================================================================
 org $B08200 ; PC 0x180200 - 0x18020B
 RedClockAmount:

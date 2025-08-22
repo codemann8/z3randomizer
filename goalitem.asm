@@ -110,6 +110,36 @@ CheckGanonVulnerability:
         BRA .all_dungeons
 
 ;--------------------------------------------------------------------------------
+GTCutscene_TransferGfx:
+	PHA
+		REP #$20
+		LDA.l GanonsTowerOpenGfx : BEQ .original_crystal
+		PHX
+			LDX.w ItemStackPtr : STA.l ItemGFXStack,X
+			LDA.w #$81C0>>1 : STA.l ItemTargetStack,X
+			INX #2 : STX.w ItemStackPtr
+		PLX
+		SEP #$20
+	PLA
+RTL
+.original_crystal
+	SEP #$20
+	PLA
+	JML TransferItemReceiptToBuffer_using_GraphicsID
+;--------------------------------------------------------------------------------
+AncillaDraw_GTCutsceneCrystal_OAMPrep:
+	LDA.l GanonsTowerOpenGfx : AND.l GanonsTowerOpenGfx+1 : BEQ .vanilla
+		LDA.b #$0E : STA.b (OAMPtr),Y
+		INY
+		LDA.l GanonsTowerOpenPalette : AND.b #$67 : ASL : ORA.b #$30
+		STA.b (OAMPtr),Y
+	RTL
+.vanilla
+	LDA.b #$24 : STA.b (OAMPtr),Y
+	INY
+	LDA.b #$3C : STA.b (OAMPtr),Y
+RTL
+;--------------------------------------------------------------------------------
 GTCutscene_CrystalMasks:
 db %00000000 ; 0 crystals
 db %10000000 ;     BIT INDEX DIAGRAM
