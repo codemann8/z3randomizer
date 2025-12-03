@@ -242,6 +242,12 @@ LoadOutdoorValue:
 	PHP
 	REP #$20 ; set 16-bit accumulator
 	LDA.b OverworldIndex
+	; Rain state fix: In rain state DW, use LW screen ID for item lookup
+	BIT.w #$0040 : BEQ +
+		LDA.l ProgressIndicator : AND.w #$00FF : CMP.w #$0002
+			LDA.b OverworldIndex : BCS ++ : AND.w #$00BF
+		++
+	+
 	CMP.w #$00 : BNE +
 		LDA.l OWBonkPrizeTable[$00].loot
 		JMP .done
