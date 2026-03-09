@@ -8,9 +8,21 @@
 !GFXLoadFlag = LimitedRunStore+$20
 !UnderworldPuzzlesSolved = LimitedRunStore+$21 ; equals how many puzzle items link's collected
 !BlinkTimer = LimitedRunStore+$22 ; Blink timer - must be zero to activate
+!SerectItemFlags = LimitedRunStore+$23 ; - - - - - - k m (bit field)
+                                       ; k = book reward | m = boomerang reward
 !NewTagTimer = $7E0AB9 ; Timer for new room tag effects
 !NewTagIndex = $7E0ABA ; Index for new room tag effects
 !NewTagFlag  = $7E0ABB ; Flag for new room tag effects
+
+!BookPortalActive   = $7E0270   ; 1 byte - Portal state (0=none, 1=placed)
+!BookPortalPosXLow  = $7E0271   ; 1 byte - Portal X position (low)
+!BookPortalPosXHigh = $7E0272   ; 1 byte - Portal X position (high)
+!BookPortalPosYLow  = $7E0273   ; 1 byte - Portal Y position (low)
+!BookPortalPosYHigh = $7E0274   ; 1 byte - Portal Y position (high)
+!BookPortalBG2HLow  = $7E0275   ; 1 byte - Camera H scroll (low)
+!BookPortalBG2HHigh = $7E0276   ; 1 byte - Camera H scroll (high)
+!BookPortalBG2VLow  = $7E0277   ; 1 byte - Camera V scroll (low)
+!BookPortalBG2VHigh = $7E0278   ; 1 byte - Camera V scroll (high)
 
 !BananaXPos = LimitedRunData
 !BananaYPos = LimitedRunData+10
@@ -179,8 +191,8 @@ Limited_PedestalBeeSecrets:
         CLC : ADC.b Scrap02
         STA.b Scrap06
         SEP #$20
-    PLX 
-    SEC 
+    PLX
+    SEC
     RTL
 
 .secret_xpos
@@ -243,7 +255,7 @@ MasterSword_ConditionalLoadOverlay:
     JSL MasterSword_LimitedCheckIfPulled
     REP #$20
     BEQ .vanilla : BCC +
-        LDA.w #$0040 : RTL 
+        LDA.w #$0040 : RTL
     + LDA.w #$0000 : RTL
 .vanilla
     LDA.l OverworldEventDataWRAM, X ; what we wrote over
@@ -258,7 +270,7 @@ Limited_HammerPegSwampNook:
     LDA.b OverworldIndex : CMP.w #$007A : BNE .exit
     INC.w HammerPegCounter
     LDA.w HammerPegCounter : CMP.w #$0007 : BNE .exit
-    PHX 
+    PHX
         SEP #$20
         LDA.l OverworldEventDataWRAM+$7A : ORA.b #$20
         STA.l OverworldEventDataWRAM+$7A
@@ -1339,7 +1351,7 @@ Ganon_Phase5_Stunned:
         LDA.w $0FA5 : CMP.b #$20 : BNE +
             STZ.w SpriteTileCollision, X
         +
-        JSL ThrownSprite_TileAndSpriteInteraction_long  
+        JSL ThrownSprite_TileAndSpriteInteraction_long
 .skip_throw
     LDA.w SpriteTimer, X : BNE .exit
         LDA.b #$01 : STA.w SpriteOAMProp, X
@@ -1411,6 +1423,9 @@ org $85D908
 org $81C893
   JSL OperateChestRevealModForPullSwitchTag
 
+org $8794AB
+  JSL ExtendRoomsWithPitDamage
+
 ; NOTE: this overrides the chest encryption function - won't work with IsEncrypted flag
 org $81EBEB
   NOP : JML GetChestDataExtended
@@ -1419,13 +1434,17 @@ org $81D961
   NOP #2
   JSL PushBlock_TileTypeMod
 
-;org $82D894  ; After vanilla SRAM pushblock init
-;  JSL InitExtendedPushBlocks
-;  NOP
-;
-;org $81889A  ; After vanilla room loading loop
-;  JSL LoadExtendedPushBlocks
-;  NOP
+org $81D7D0  ; PushBlock_Main floor tile restoration
+  JSL PushBlock_FloorTileCheck
+  NOP #2
+
+org $82D894  ; After vanilla SRAM pushblock init
+  JSL InitExtendedPushBlocks
+  NOP
+
+org $81889A  ; After vanilla room loading loop
+  JSL LoadExtendedPushBlocks
+  NOP
 
 org $87A0B8  ; see LinkItem_Boomerang, bank07
   JSL SecretBoomerang
@@ -1435,9 +1454,14 @@ org $87A0B8  ; see LinkItem_Boomerang, bank07
 org $878102
   JSL HandleBlinkTimer
 
-;org $81D7D0  ; PushBlock_Main floor tile restoration
-;  JSL PushBlock_FloorTileCheck
-;  NOP #2
+org $87A470
+  JSL SecretBook
+
+org $85AF7F
+db $80
+
+org $86ECC5
+  JSL SliverBoomDamageUpgrade
 
 ; Push block overrides:
 
@@ -1551,6 +1575,7 @@ ClearNewTagMem:
   STZ.w !NewTagIndex
   STZ.w !NewTagTimer
   STZ.w !NewTagFlag
+  STZ.w !BookPortalActive
   RTL
 
 ;--------------------------------------------------------------------------------
@@ -2387,9 +2412,9 @@ TilemapOffsetToVRAM:
 
 ; Pressure plate positions in room $0038 (tilemap indices)
 PressurePlatePositions:
-  dw $0972  ; (X=$29, Y=$08)
+  dw $0452  ; (X=$29, Y=$08)
   dw $0652  ; (X=$29, Y=$0C)
-  dw $1452  ; (X=$29, Y=$10)
+  dw $0852  ; (X=$29, Y=$10)
   dw $0556  ; (X=$2B, Y=$0A)
   dw $0756  ; (X=$2B, Y=$0E)
   dw $065A  ; (X=$2D, Y=$0C)
@@ -2400,7 +2425,7 @@ HandleSokobanTag:
   ; Check if chest already opened
   SEP #$20
 
-  LDA.l RoomDataWRAM[$AB].low : AND.b #$10 : BNE .exit ; Check if chest already opened
+  LDA.l RoomDataWRAM[$38].low : AND.b #$10 : BNE .exit ; Check if chest already opened
 
   ; Check all 6 pressure plates - each must have a pushblock on it
   REP #$30
@@ -2455,14 +2480,60 @@ HandleSokobanTag:
 ;--------------------------------------------------------------------------------
 
 HandlePortalRoomTag:
-  RTS ; stubbed out for now
+  LDA.b $14
+  BNE .exit
+
+  LDA.w $0B2E       ; FallingBridge tile counter (overlord slot 1, counts backward)
+  CMP.b #$2A
+  BNE .exit
+
+  LDA.w $0641       ; block pushed flag
+  BEQ .exit
+
+  PHK : PEA.w .exit-1
+  PEA.w $81CF8C ; an rtl address - 1 in Bank01
+  JML RoomTag_OperateChestReveal ; _01C7D8
+
+.exit
+RTS
+
+ExtendRoomsWithPitDamage:
+  LDA.b $1B
+  AND.w #$00FF
+  BEQ .not_custom
+  LDA.b $A0
+  CMP.w #$0091
+  BNE .not_custom
+  SEP #$30
+  PLA : PLA : PLA
+  JML UnderworldPitDoDamage
+.not_custom:
+  SEP #$20
+  LDA.b $A0
+RTL
+
+
 
 ;--------------------------------------------------------------------------------
 ;  Final Puzzle Tag Code
 ;--------------------------------------------------------------------------------
 
 HandleFinalPuzzleTag:
-  RTS ; stubbed out for now
+  LDA.b $14
+  BNE .exit
+
+  LDA.b LinkQuadrantH : BNE .exit
+  LDA.b LinkQuadrantV : BEQ .exit
+
+  ; todo
+  LDA.l !UnderworldPuzzlesSolved : CMP.b #$07 : BCC .exit
+
+  PHK : PEA.w .exit-1
+  PEA.w $81CF8C ; an rtl address - 1 in Bank01
+  JML RoomTag_OperateChestReveal ; _01C7D8
+.exit
+RTS
+
 
 ;--------------------------------------------------------------------------------
 ;  New Chest Code
@@ -2477,7 +2548,7 @@ dw $00D5 : db $04 : db $B8  ; red boom puzzle item
 dw $00AB : db $00 : db $B8  ; red boom puzzle item
 dw $0038 : db $00 : db $B8  ; red boom puzzle item
 dw $0091 : db $00 : db $B9  ; altered puzzle item
-dw $0000 : db $00 : db $BA  ; final reward
+dw $005C : db $00 : db $BA  ; final reward
 ; SEE HARDCODE TABLE SIZE below currently $0020 (32 bytes, 8 entries)
 
 GetChestDataExtended:
@@ -2519,7 +2590,9 @@ PushBlock_TileTypeMod:
   CMP.w #$00D5 : BEQ .multipush
   CMP.w #$0120 : BNE .normal
 .multipush
-  LDA.w #$7070 : RTL
+; ;figure out manipulable index
+  TYA : LSR : ORA.w #$0070 : STA.b $00 : XBA : ORA.b $00
+  RTL
 .normal
   LDA.w #$2727 : RTL
 
@@ -2529,75 +2602,91 @@ PushBlock_TileTypeMod:
 
 ; Pressure plate tile values (2x2 16x16 tile = 4 tiles)
 ; PLACEHOLDER: Fill in actual tile values after testing in-game
-;PressurePlateTiles:
-;  dw $FFFF  ; Top-left
-;  dw $FFFF  ; Top-right
-;  dw $FFFF  ; Bottom-left
-;  dw $FFFF  ; Bottom-right
-;
-;; Hook function: Check if block is moving off pressure plate, preserve tiles
-;; Called in 16-bit mode (REP #$20 already active)
-;PushBlock_FloorTileCheck:
-;  ; Check if room $0038
-;  LDA.b RoomIndex            ; Room index is 16-bit
-;  CMP.w #$0038
-;  BNE .execute_original
-;
-;  ; Check if tag $45 active
-;  LDA.b $AE
-;  AND.w #$00FF         ; Mask to 8-bit value (tag is 8-bit)
-;  CMP.w #$0045
-;  BNE .execute_original
-;
-;  ; Check if block is at pressure plate position
-;  LDA.w $0540,Y        ; Load tilemap position
-;  AND.w #$3FFF         ; Mask off flags
-;
-;  LDX.w #$0000
-;.check_loop
-;  CMP.l PressurePlatePositions,X
-;  BEQ .found_match
-;  INX : INX
-;  CPX.w #!PRESSURE_PLATE_COUNT*2
-;  BNE .check_loop
-;  BRA .execute_original
-;
-;.found_match
-;  ; Override stored floor tiles with pressure plate tiles
-;  LDA.l PressurePlateTiles+0
-;  STA.w $0560,Y
-;  LDA.l PressurePlateTiles+2
-;  STA.w $0580,Y
-;  LDA.l PressurePlateTiles+4
-;  STA.w $05A0,Y
-;  LDA.l PressurePlateTiles+6
-;  STA.w $05C0,Y
-;
-;.execute_original
-;  ; Call original drawing function using jslrts (stays in 16-bit mode)
-;  PHK : PEA.w .return-1
-;  PEA.w $81CF8C       ; RTL address - 1 in Bank01
-;  JML RoomDraw_16x16Single
-;.return
-;  LDX.w $0474  ; overriden instruction - must be executed
-;  RTL
+PressurePlateTiles:
+  dw $0CD2  ; Top-left
+  dw $0CEB  ; Bottom-left
+  dw $0CD3  ; Top-right
+  dw $0CFB  ; Bottom-right
+
+NormalTiles:
+  dw $0CEF
+  dw $0CFF
+  dw $0CEE
+  dw $0CFE
+
+; Hook function: Check if block is moving off pressure plate, preserve tiles
+; Called in 16-bit mode (REP #$20 already active)
+PushBlock_FloorTileCheck:
+  ; Check if room $0038
+  LDA.b RoomIndex            ; Room index is 16-bit
+  CMP.w #$0038
+  BNE .execute_original
+
+  ; Check if tag $45 active
+  LDA.b $AE
+  AND.w #$00FF         ; Mask to 8-bit value (tag is 8-bit)
+  CMP.w #$0045
+  BNE .execute_original
+
+  ; Check if block is at pressure plate position
+  LDA.w $0540,Y        ; Load tilemap position
+  AND.w #$3FFF         ; Mask off flags
+
+  LDX.w #$0000
+.check_loop
+  CMP.l PressurePlatePositions,X
+  BEQ .found_match
+  INX : INX
+  CPX.w #!PRESSURE_PLATE_COUNT*2
+  BNE .check_loop
+
+  LDA.l NormalTiles+0
+  STA.w $0560,Y
+  LDA.l NormalTiles+2
+  STA.w $0580,Y
+  LDA.l NormalTiles+4
+  STA.w $05A0,Y
+  LDA.l NormalTiles+6
+  STA.w $05C0,Y
+  BRA .execute_original
+
+.found_match
+  ; Override stored floor tiles with pressure plate tiles
+  LDA.l PressurePlateTiles+0
+  STA.w $0560,Y
+  LDA.l PressurePlateTiles+2
+  STA.w $0580,Y
+  LDA.l PressurePlateTiles+4
+  STA.w $05A0,Y
+  LDA.l PressurePlateTiles+6
+  STA.w $05C0,Y
+
+.execute_original
+  ; Call original drawing function using jslrts (stays in 16-bit mode)
+  PHK : PEA.w .return-1
+  PEA.w $81CF8C       ; RTL address - 1 in Bank01
+  JML RoomDraw_16x16Single
+.return
+  LDX.w $0474  ; overriden instruction - must be executed
+  RTL
 
 ;--------------------------------------------------------------------------------
 ;  Extended Pushblock System
 ;--------------------------------------------------------------------------------
 
-; Configuration: Change this to add more blocks (max 29)
-!EXTENDED_PUSHBLOCK_COUNT = 6
+; Configuration: Change this to add more blocks (max 8 because of memory address usage)
+!EXTENDED_PUSHBLOCK_COUNT = 7
 
 ; Data table: Add pushblock entries here
 ; Format: dw RoomID, TilemapIndex
 ExtendedPushBlocks:
-  dw $0038, $0652  ; Slot 99  - (X=$29, Y=$0C)
-  dw $0038, $0556  ; Slot 100 - (X=$2B, Y=$0A)
-  dw $0038, $0756  ; Slot 101 - (X=$2B, Y=$0E)
+  dw $0038, $0752  ; Slot 99  - (X=$29, Y=$0E)
+  dw $0038, $0552  ; Slot 100 - (X=$29, Y=$0A)
+  dw $0038, $075A  ; Slot 101 - (X=$2D, Y=$0E)
   dw $0038, $066A  ; Slot 102 - (X=$35, Y=$0C)
   dw $0038, $066E  ; Slot 103 - (X=$37, Y=$0C)
   dw $0038, $056E  ; Slot 104 - (X=$37, Y=$0A)
+  dw $0091, $0418  ; Slot 105 - (X=$0C, Y=$08)
   ; Add up to 23 more entries here (slots 105-127)
   ; Maximum capacity: 29 entries = 116 bytes
 
@@ -2606,78 +2695,80 @@ ExtendedPushBlocks:
 ; Called once at game start to copy extended pushblocks to SRAM
 ; Replaces: LDX.b #$3E : LDA.w #$0000
 ;--------------------------------------------------------------------------------
-;InitExtendedPushBlocks:
-;  PHP
-;  REP #$20
-;
-;  ; Copy extended pushblocks from ROM to SRAM
-;  ; Can't use Y-indexed with long addressing, so use absolute addressing
-;  LDX.w #$0000           ; ROM table offset
-;.loop
-;  LDA.l ExtendedPushBlocks,X
-;  STA.w $7EF9CC,X        ; $7EF940 + $018C = $7EFACC (slot 99 start)
-;  INX : INX
-;  CPX.w #!EXTENDED_PUSHBLOCK_COUNT*4  ; Count × 4 bytes per entry
-;  BNE .loop
-;
-;  PLP
-;
-;  ; Execute replaced instructions (ensure 16-bit A mode)
-;  REP #$20
-;  LDX.b #$3E             ; Original instruction
-;  LDA.w #$0000           ; Original instruction
-;  RTL
+InitExtendedPushBlocks:
+  ; Copy extended pushblocks from ROM to SRAM
+  ; Can't use Y-indexed with long addressing, so use absolute addressing
+  LDX.b #$00             ; ROM table offset
+.loop
+  LDA.l ExtendedPushBlocks,X
+  STA.w $0250, X        ; $0250 (slot 99 start)
+  INX : INX
+  CPX.b #!EXTENDED_PUSHBLOCK_COUNT*4  ; Count × 4 bytes per entry
+  BNE .loop
+
+  ; Execute replaced instructions
+  LDX.b #$3E             ; Original instruction
+  LDA.w #$0000           ; Original instruction
+  RTL
 
 ;--------------------------------------------------------------------------------
 ; LoadExtendedPushBlocks
 ; Called every room entry to check for extended pushblocks in current room
 ; Replaces: REP #$20 : LDA.w $042C
 ;--------------------------------------------------------------------------------
-;LoadExtendedPushBlocks:
-;  REP #$20               ; Execute replaced instruction early (needed for our code)
-;
-;  ; Loop through extended SRAM slots (99+)
-;  LDA.w #$018C           ; Start index (slot 99)
-;  STA.b $BA
-;
-;.loop
-;  LDX.b $BA
-;
-;  ; Check if room ID matches current room
-;  LDA.l $7EF940,X        ; Load room ID from SRAM
-;  CMP.b $A0              ; Compare with current room
-;  BNE .next
-;
-;  ; Match found - load and draw pushblock
-;  LDA.l $7EF942,X        ; Load tilemap index
-;  STA.b $08
-;  TAY
-;
-;  ; Call vanilla draw function using jslrts technique
-;  PHK : PEA.w .jslrtsreturn-1
-;  PEA.w $81CF8C          ; RTL address - 1 in Bank01
-;  JML RoomDraw_PushableBlock
-;.jslrtsreturn
-;  REP #$20               ; Restore 16-bit A mode after draw function
-;
-;.next
-;  LDA.b $BA
-;  CLC
-;  ADC.w #$0004           ; Next entry (+4 bytes)
-;  STA.b $BA
-;  CMP.w #$018C+(!EXTENDED_PUSHBLOCK_COUNT*4)  ; End index
-;  BCC .loop              ; Continue if less than limit
-;
-;  ; Execute replaced instruction
-;  LDA.w $042C            ; Original instruction (already in 16-bit mode)
-;  RTL
+LoadExtendedPushBlocks:
+  REP #$30               ; Need 16-bit A and X/Y for our code
+
+  ; Loop through extended RAM slots (99+)
+  TDC                  ; Start index (slot 99)
+  STA.b $BA
+
+.loop
+  LDX.b $BA
+
+  ; Check if room ID matches current room
+  LDA.w $0250,X        ; Load room ID from RAM
+  CMP.b $A0            ; Compare with current room
+  BNE .next
+
+  ; Match found - load and draw pushblock
+  LDA.w $0252,X        ; Load tilemap index
+  STA.b $08
+  TAY
+
+  ; Call vanilla draw function using jslrts technique
+  PHK : PEA.w .jslrtsreturn-1
+  PEA.w $81CF8C          ; RTL address - 1 in Bank01
+  JML RoomDraw_PushableBlock
+.jslrtsreturn
+  REP #$30               ; Restore 16-bit A and X/Y mode after draw function
+
+.next
+  LDA.b $BA
+  CLC
+  ADC.w #$0004           ; Next entry (+4 bytes)
+  STA.b $BA
+  CMP.w #!EXTENDED_PUSHBLOCK_COUNT*4  ; End index
+  BCC .loop              ; Continue if less than limit
+
+    ; Execute replaced instruction
+  LDA.w $042C            ; Original instruction (already in 16-bit mode)
+  RTL
 
 ;--------------------------------------------------------------------------------
 ;  Reward Item
 ;--------------------------------------------------------------------------------
 
+LimitedRun_ReceiveBookItem:
+  LDA.l !SerectItemFlags : ORA.b #$02 : STA.l !SerectItemFlags
+  ; fall through
 LimitedRun_ReceiveRewardItem:
   LDA.l !UnderworldPuzzlesSolved : INC : STA.l !UnderworldPuzzlesSolved
+  TYA
+  RTL
+
+LimitedRun_ReceiveBoomItem:
+  LDA.l !SerectItemFlags : ORA.b #$01 : STA.l !SerectItemFlags
   TYA
   RTL
 
@@ -2711,9 +2802,7 @@ SecretBoomerang:
   JSR TeleportLink_Overworld
 
 .after_teleport
-  ; if activated, set timer I guess
-  LDA.b #$05 ; todo: number of puzzles available
-  SEC : SBC.l !UnderworldPuzzlesSolved : TAX ; LDA.l !UnderworldPuzzlesSolved : TAX for simpler table
+  LDA.l !UnderworldPuzzlesSolved : DEC : TAX
   LDA.l CooldownTable, X
   STA.l !BlinkTimer
 
@@ -2726,9 +2815,7 @@ SecretBoomerang:
 
 CooldownTable:
 ; simpler lookup if we finish 7 puzzles
-;  db $FF, $7D, $33, $1D, $0C, $07, $00
-; subtraction version
-  db $00, $07, $0C, $1D, $33, $7D, $FF
+  db $FF, $7D, $33, $1D, $0C, $07, $00
 
 ;===================================================================================================
 ; Teleport Link to Absolute Position with Camera Clamping
@@ -3401,5 +3488,79 @@ BlinkMeterColorTable:
 
 ; Table size: 256 entries × 8 bytes = 2048 bytes (2KB)
 ; Table spans $0800 bytes
+
+; =========================================================================
+; Book of Mudora Portal System
+; =========================================================================
+; Original code:
+;#_07A470: AND.b #$BF
+;#_07A472: STA.b $3A
+
+SecretBook:
+  AND.b #$BF : STA.b $3A ; code we wrote over and A is free
+
+  LDA.b IndoorsFlag : BEQ .exit
+  LDA.b $A0 : CMP.b #$91 : BEQ .can_portal  ; special exception for room were mechanic is introduced
+  LDA.l SerectItemFlags : AND.b #$02 : BEQ .exit
+
+.can_portal
+  ; Y button pressed indoors - check portal state
+  LDA.w BookPortalActive
+  BNE .restore_to_portal ; If portal exists, teleport to it
+
+  ; No portal exists - place one - Save current position and camera
+.place_portal
+  REP #$20 ; we are currently in 8-bit mode , I think
+  ; Save Link's position
+  LDA.b $20 : STA.w BookPortalPosYLow
+  LDA.b $22 : STA.w BookPortalPosXLow
+  LDA.b $E2 : STA.w BookPortalBG2HLow
+  LDA.b $E8 : STA.w BookPortalBG2VLow
+  SEP #$20
+
+  ; Mark portal as active
+  INC.w BookPortalActive
+
+  LDA.b #$6C ; mirror portal sprite
+  JSL Sprite_SpawnDynamically
+  BMI .exit  ; just accept the invisible one?
+  TAY
+  LDA.b LinkPosY   : STA.w $0D00,Y
+  LDA.b LinkPosY+1 : STA.w $0D20,Y
+  LDA.b LinkPosX   : STA.w $0D10,Y
+  LDA.b LinkPosX+1 : STA.w $0D30,Y
+.exit
+RTL
+    ; Restore to Portal - Teleport Link back to saved position
+.restore_to_portal
+  ; Restore Link's position
+  REP #$20 ; we are currently in 8-bit mode , I think
+  LDA.w BookPortalPosYLow : STA.b $20
+  LDA.w BookPortalPosXLow : STA.b $22
+  ; Restore camera scroll position
+  LDA.w BookPortalBG2HLow : STA.b $E2
+  LDA.w BookPortalBG2VLow : STA.b $E8
+  SEP #$20
+
+RTL
+
+; =========================================================================
+; Boomerang Damage Upgrade
+; =========================================================================
+
+SliverBoomDamageUpgrade:
+  CPX.b #$05 : BNE .not_blue_boom
+  LDA.l BoomerangEquipment  ; Load boomerang type
+  CMP.b #$01 : BNE .not_blue_boom
+  LDA.l SerectItemFlags : AND.b #$01 : BEQ .not_blue_boom ; not yet enabled
+  LDA $04, S : TAX
+  LDA.w $0E20,X : CMP.b #$D7 : BNE .not_ganon
+  LDA.b #$20 : STA.w $0F10, X
+.not_ganon
+  LDA.b #$09
+RTL
+.not_blue_boom
+  LDA.l AncillaDamageClasses, X ; original code, this function needs to exit with damage class in A
+RTL
 
 warnpc $AE8000
