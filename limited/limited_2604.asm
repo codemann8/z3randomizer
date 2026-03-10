@@ -3501,25 +3501,25 @@ SecretBook:
 
   LDA.b IndoorsFlag : BEQ .exit
   LDA.b $A0 : CMP.b #$91 : BEQ .can_portal  ; special exception for room were mechanic is introduced
-  LDA.l SerectItemFlags : AND.b #$02 : BEQ .exit
+  LDA.l !SerectItemFlags : AND.b #$02 : BEQ .exit
 
 .can_portal
   ; Y button pressed indoors - check portal state
-  LDA.w BookPortalActive
+  LDA.w !BookPortalActive
   BNE .restore_to_portal ; If portal exists, teleport to it
 
   ; No portal exists - place one - Save current position and camera
 .place_portal
   REP #$20 ; we are currently in 8-bit mode , I think
   ; Save Link's position
-  LDA.b $20 : STA.w BookPortalPosYLow
-  LDA.b $22 : STA.w BookPortalPosXLow
-  LDA.b $E2 : STA.w BookPortalBG2HLow
-  LDA.b $E8 : STA.w BookPortalBG2VLow
+  LDA.b $20 : STA.w !BookPortalPosYLow
+  LDA.b $22 : STA.w !BookPortalPosXLow
+  LDA.b $E2 : STA.w !BookPortalBG2HLow
+  LDA.b $E8 : STA.w !BookPortalBG2VLow
   SEP #$20
 
   ; Mark portal as active
-  INC.w BookPortalActive
+  INC.w !BookPortalActive
 
   LDA.b #$6C ; mirror portal sprite
   JSL Sprite_SpawnDynamically
@@ -3535,11 +3535,11 @@ RTL
 .restore_to_portal
   ; Restore Link's position
   REP #$20 ; we are currently in 8-bit mode , I think
-  LDA.w BookPortalPosYLow : STA.b $20
-  LDA.w BookPortalPosXLow : STA.b $22
+  LDA.w !BookPortalPosYLow : STA.b $20
+  LDA.w !BookPortalPosXLow : STA.b $22
   ; Restore camera scroll position
-  LDA.w BookPortalBG2HLow : STA.b $E2
-  LDA.w BookPortalBG2VLow : STA.b $E8
+  LDA.w !BookPortalBG2HLow : STA.b $E2
+  LDA.w !BookPortalBG2VLow : STA.b $E8
   SEP #$20
 
 RTL
@@ -3552,7 +3552,7 @@ SliverBoomDamageUpgrade:
   CPX.b #$05 : BNE .not_blue_boom
   LDA.l BoomerangEquipment  ; Load boomerang type
   CMP.b #$01 : BNE .not_blue_boom
-  LDA.l SerectItemFlags : AND.b #$01 : BEQ .not_blue_boom ; not yet enabled
+  LDA.l !SerectItemFlags : AND.b #$01 : BEQ .not_blue_boom ; not yet enabled
   LDA $04, S : TAX
   LDA.w $0E20,X : CMP.b #$D7 : BNE .not_ganon
   LDA.b #$20 : STA.w $0F10, X
