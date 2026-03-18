@@ -2904,7 +2904,47 @@ TeleportLink_Underworld:
   INC #2        ; South = North + 2
   STA.w CameraScrollS
 
+  ; Adjust small-room camera bounds by quadrant delta, mirroring AdjustCameraBoundaries logic.
+  LDA.b $A6 : AND.w #$00FF           ; CameraBoundH
+  BEQ .no_hfix
+  LDA.b $A9 : AND.w #$00FF : XBA : AND.w #$0100  ; old H offset: $0000 or $0100
+  STA.b $04
+  LDA.w LinkPosX : AND.w #$0100      ; new H offset
+  SEC : SBC.b $04                    ; delta = new - old
+  BEQ .no_hfix
+  PHA
+  CLC : ADC.w $0608 : STA.w $0608
+  PLA
+  CLC : ADC.w $060C : STA.w $060C
+.no_hfix
+
+  LDA.b $A6 : AND.w #$FF00           ; CameraBoundV
+  BEQ .no_vfix
+  LDA.b $AA : AND.w #$00FF : LSR : XBA : AND.w #$0100  ; old V offset: $0000 or $0100
+  STA.b $04
+  LDA.w LinkPosY : AND.w #$0100      ; new V offset
+  SEC : SBC.b $04                    ; delta = new - old
+  BEQ .no_vfix
+  PHA
+  CLC : ADC.w $0600 : STA.w $0600
+  PLA
+  CLC : ADC.w $0604 : STA.w $0604
+.no_vfix
+
+  ; Reset BG1 parallax sub-pixel accumulators ($0620/$0622).
+  ; Stale values cause BG1H/BG1V to diverge from BG2H/BG2V in parallax rooms.
+  STZ.w $0620
+  STZ.w $0622
+
+  ; Recalculate quadrants.
   SEP #$20
+  LDA.b LinkPosX+1
+  AND.b #$01        : STA.b LinkQuadrantH                ; 0 or 1
+  LDA.b LinkPosY+1
+  AND.b #$01 : ASL  : STA.b LinkQuadrantV                ; 0 or 2
+  ORA.b LinkQuadrantH                                    ; bit1=QUADV/2, bit0=QUADH
+  STA.b $00
+  LDA.b $A8 : AND.b #$FC : ORA.b $00 : STA.b $A8        ; update ROOMLAYOUT ($A8) low 2 bits
   RTS
 
 ;===================================================================================================
