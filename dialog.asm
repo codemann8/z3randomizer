@@ -240,8 +240,17 @@ DialogItemReceive:
 	BCS .nomessage ; if doubling the item value overflowed it must be a rando item
 	CPY.b #$98 : BCC ++ ;if the item is $4C or greater it must be a rando item
 .nomessage
+	if !FEATURE_LIMITED_RUN == 2604
+		CPY.w #$170 : BCC .notSpecial      ; below $B8
+		CPY.w #$176 : BCS .notSpecial      ; above $BA
+		TYA : LSR                 ; A = item_id
+		SEC : SBC.w #$00B8        ; A = 0/1/2 offset into table
+		ASL : TAX
+		LDA.w #$0134
+		BRA .done
+	.notSpecial
+	endif
 	LDA.w #$FFFF
-
 	BRA .done
 
 ++	LDA.w Ancilla_ReceiveItem_item_messages, Y

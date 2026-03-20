@@ -146,7 +146,7 @@ BG1V = $7E00E6                    ; Since BG1 and BG2 are not written directly t
 BG2V = $7E00E8                    ;
 BG3VOFSQL = $7E00EA               ;
                                   ;
-LinkLayer = $7E00EE               ; Layer that Link is on. $00 = BG2 (upper) | $02 = BG1 (lower)
+LinkLayer = $7E00EE               ; Layer that Link is on. $00 = BG2 (upper) | $01 = BG1 (lower)
                                   ;
 Joy1A_All = $7E00F0               ; Joypad input
 Joy2A_All = $7E00F1               ; All = Current & previous frame

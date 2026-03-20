@@ -89,6 +89,7 @@ DashKey_Draw                                               = $86DD40
 ThrownSprite_TileAndSpriteInteraction_long                 = $86DFF8
 Sprite_PrepOAMCoordLong                                    = $86E41C
 Sprite_CheckTileCollisionLong                              = $86E49C
+GetTileType_long                                           = $86E881
 Sprite_ApplySpeedTowardsPlayerLong                         = $86EA18
 Sprite_DirectionToFacePlayerLong                           = $86EAA6
 Sprite_CheckDamageToPlayerLong                             = $86F127

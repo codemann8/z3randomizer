@@ -1593,36 +1593,68 @@ ClearNewTagMem:
 ;--------------------------------------------------------------------------------
 
 PatternTarget:
-  db $04, $01, $08, $01, $01, $04, $02 ; d,r,u,r,r,d,l (udlr)
+  db $04, $01, $08, $01, $01, $04, $02 ; d,r,u,r,r,d,l (forward, udlr encoding)
+PatternTargetReverse:
+  db $01, $08, $02, $02, $04, $02, $08 ; r,u,l,l,d,l,u (reverse)
 
 HandleTunicTag:
   LDA.w !NewTagIndex
-  CMP.b #$07 ; already completed
-  BEQ .exit
+  AND.b #$7F             ; strip direction bit for completion check
+  CMP.b #$07
+  BNE .continue
+  RTS
+.continue
   LDA.w !NewTagTimer
-  BEQ .reset_pattern ; timeout reached
+  BEQ .reset_pattern
   DEC.w !NewTagTimer
 
   LDA.b Joy1A_New
   AND.b #$0F
   BEQ .release_input
-  LDX.w !NewTagFlag ; use X to not corrupt input in A
-  BNE .exit ; no clean release yet
+  LDX.w !NewTagFlag
+  BNE .exit
 
   LDX.w !NewTagIndex
-  AND.l PatternTarget, X ; check if matches target pattern
-  BEQ .reset_pattern ; reset if wrong input
+  BNE .not_step0
 
+  ; Step 0: direction not yet determined; try forward then reverse
+  TAY                                ; save buttons (AND will destroy A)
+  AND.l PatternTarget, X             ; check forward: PatternTarget[0]
+  BNE .step0_forward
+  TYA                                ; restore buttons
+  AND.l PatternTargetReverse, X     ; check reverse: PatternTargetReverse[0]
+  BEQ .reset_pattern
+  LDA.w !NewTagIndex : ORA.b #$80 : STA.w !NewTagIndex  ; tag as reverse
+.step0_forward
+  LDX.w !NewTagIndex
+  BRA .check_complete
+
+.not_step0
+  BMI .do_reverse
+  AND.l PatternTarget, X             ; forward: X = step (no direction bit)
+  BEQ .reset_pattern
+  BRA .check_complete
+
+.do_reverse
+  ; X = $80|step; preserve buttons in Y while computing index
+  TAY                                ; save buttons
+  TXA : AND.b #$7F : TAX             ; X = step (strip direction bit)
+  TYA                                ; restore buttons
+  AND.l PatternTargetReverse, X     ; check match
+  LDX.w !NewTagIndex                 ; restore X = $80|step
+  BEQ .reset_pattern
+
+.check_complete
   INX
-  CPX.b #$07  ; is pattern complete?
+  TXA : AND.b #$7F : CMP.b #$07     ; test step (masked) for completion
   BEQ .pattern_complete
   INC.w !NewTagFlag
-  LDX.b #$B4 ; 180 frames (~3 second timeout)
+  LDX.b #$B4
   STX.w !NewTagTimer
   RTS
 
 .pattern_complete
-  STX.w !NewTagIndex ; mark as complete
+  STX.w !NewTagIndex                 ; stores $07 (forward) or $87 (reverse)
   PHK : PEA.w .jslrtsreturn-1
   PEA.w $81CF8C ; an rtl address - 1 in Bank01
   JML RoomTag_OperateChestReveal ; _01C7D8
@@ -1631,16 +1663,16 @@ HandleTunicTag:
 
 .release_input
   LDA.w !NewTagFlag
-  BEQ .exit ; nothig to do
+  BEQ .exit
   LDA.w !NewTagIndex
-  INC
+  INC                                ; preserves direction bit ($80+N stays $80+N+1)
   STA.w !NewTagIndex
   STZ.w !NewTagFlag
   RTS
 
 .reset_pattern
-  STZ.w !NewTagIndex
-  LDA.b #$B4 ; 180 frames (~3 second timeout)
+  STZ.w !NewTagIndex                 ; clears direction bit automatically
+  LDA.b #$B4
   STA.w !NewTagTimer
   STZ.w !NewTagFlag
 .exit
@@ -2696,7 +2728,7 @@ ExtendedPushBlocks:
   dw $0038, $066A  ; Slot 102 - (X=$35, Y=$0C)
   dw $0038, $066E  ; Slot 103 - (X=$37, Y=$0C)
   dw $0038, $056E  ; Slot 104 - (X=$37, Y=$0A)
-  dw $0091, $0418  ; Slot 105 - (X=$0C, Y=$08)
+  dw $0091, $0A0A  ; Slot 105 - (X=$05, Y=$14)
   ; Add up to 23 more entries here (slots 105-127)
   ; Maximum capacity: 29 entries = 116 bytes
 
@@ -2770,7 +2802,7 @@ LoadExtendedPushBlocks:
 ;--------------------------------------------------------------------------------
 
 LimitedRun_ReceiveBookItem:
-  LDA.l !SecretItemFlags : ORA.b #$02 : STA.l !SecretItemFlags
+  LDA.l !SecretItemFlags : ORA.w #$0002 : STA.l !SecretItemFlags
   ; fall through
 LimitedRun_ReceiveRewardItem:
   LDA.l !UnderworldPuzzlesSolved : INC : STA.l !UnderworldPuzzlesSolved
@@ -2778,7 +2810,7 @@ LimitedRun_ReceiveRewardItem:
   RTL
 
 LimitedRun_ReceiveBoomItem:
-  LDA.l !SecretItemFlags : ORA.b #$01 : STA.l !SecretItemFlags
+  LDA.l !SecretItemFlags : ORA.w #$0001 : STA.l !SecretItemFlags
   TYA
   RTL
 
@@ -2807,7 +2839,7 @@ SecretBoomerang:
   LDA.b LinkPosY : STA.w AncillaCoordYLow, X : LDA.b LinkPosY+1 : STA.w AncillaCoordYHigh, X
   LDA.b LinkPosX : STA.w AncillaCoordXLow, X : LDA.b LinkPosX+1 : STA.w AncillaCoordXHigh, X
   LDA.b IndoorsFlag : BEQ .overworld_teleport
-  JSR TeleportLink_Underworld : BRA .after_teleport
+  JSR TeleportLink_Underworld : BCS .set_exit : BRA .after_teleport
 .overworld_teleport
   JSR TeleportLink_Overworld
 
@@ -2838,6 +2870,24 @@ CooldownTable:
 ;===================================================================================================
 
 TeleportLink_Underworld:
+  ; Determine layer from tile collision at boomerang's current position
+  ; $00/$01=Y, $02/$03=X set by caller; GetTileType_long clobbers $04/$05, preserves X
+  ; Upper floor: COLMAPA=$00; Lower floor: COLMAPA=$1C (non-zero); Wall: COLMAPA=$01/$04
+  ; Note: PLB in GetTileType_long corrupts flags on return; AND.b #$FF re-establishes N/Z from A
+  LDA.b #$00 : JSL GetTileType_long  ; A = COLMAPA tile type
+  AND.b #$FF
+  BNE .check_lower           ; COLMAPA non-zero -> not upper floor, check lower
+  STZ.b LinkLayer            ; COLMAPA=$00 -> upper layer ($00 = BG2)
+  BRA .ee_set
+.check_lower
+  LDA.b #$01 : JSL GetTileType_long  ; A = COLMAPB tile type
+  AND.b #$FF
+  BNE .wall_abort            ; both non-zero -> wall, abort teleport
+  LDA.b #$01 : STA.b LinkLayer  ; COLMAPB=$00 -> lower layer ($01 = BG1)
+  BRA .ee_set
+.wall_abort
+  SEC : RTS                  ; signal failure; caller skips cooldown
+.ee_set
   REP #$20
 
   ;-----------------------------------------------------------------------------------------------
@@ -2955,6 +3005,7 @@ TeleportLink_Underworld:
   ORA.b LinkQuadrantH                                    ; bit1=QUADV/2, bit0=QUADH
   STA.b Scrap00
   LDA.b $A8 : AND.b #$FC : ORA.b Scrap00 : STA.b $A8     ; update ROOMLAYOUT ($A8) low 2 bits
+  CLC                        ; signal success
   RTS
 
 ;===================================================================================================

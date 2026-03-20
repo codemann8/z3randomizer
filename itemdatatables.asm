@@ -323,7 +323,7 @@ endmacro
 %ReceiptProps($B7, -4, 0, $49, $F36A, $FF, skip, skip) ; B7 - Reserved
 if !FEATURE_LIMITED_RUN == 2604
 	%ReceiptProps($B8, -2, 5, $10, $F358, $FF, skip, puzzle) ; B8 - Puzzle reward
-	%ReceiptProps($B9, -2, 5, $10, $F358, $FF, skip, puzzle_book) ; B9 - Puzzle reward (book)
+	%ReceiptProps($B9, -4, 0, $0E, $F358, $FF, skip, puzzle_book) ; B9 - Puzzle reward (book)
 	%ReceiptProps($BA, -2, 5, $10, $F358, $FF, skip, puzzle_silver_boom) ; BA - Puzzle reward (silver boomerang)
 else
 	%ReceiptProps($B8, -4, 0, $49, $F36A, $FF, skip, skip) ; B8 -
