@@ -241,8 +241,8 @@ DialogItemReceive:
 	CPY.b #$98 : BCC ++ ;if the item is $4C or greater it must be a rando item
 .nomessage
 	if !FEATURE_LIMITED_RUN == 2604
-		CPY.w #$170 : BCC .notSpecial      ; below $B8
-		CPY.w #$176 : BCS .notSpecial      ; above $BA
+		CPY.b #$70 : BCC .notSpecial      ; item < $B8 (Y holds item_id*2 low byte, carry already set)
+		CPY.b #$76 : BCS .notSpecial      ; item >= $BB
 		LDA.w #$0134 ; hardcoded to one message for now (previous commit had a per item table)
 		BRA .done
 	.notSpecial
