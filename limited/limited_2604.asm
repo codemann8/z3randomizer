@@ -475,7 +475,7 @@ JSL ThrownSprite_FakeMasterSwordDeath : NOP
 pullpc
 
 Limited_InitializeWallmasterTileset:
-    LDA.w EntranceIndex : CMP.b #$81 : BNE .exit
+    LDA.w EntranceIndex : CMP.l Overworld_GetPitDestination_screen+$2D : BNE .exit
     LDA.b LinkFallPose : BEQ .exit
     LDA.b IndoorsFlag : BEQ .exit
     LDA.w OverworldIndexMirror : BNE .exit ; came in from lost woods
@@ -485,7 +485,7 @@ Limited_InitializeWallmasterTileset:
     RTL
 
 Limited_UnderworldPrepWallmasterKickOut:
-    LDA.w EntranceIndex : CMP.b #$81 : BNE .vanilla
+    LDA.w EntranceIndex : CMP.l Overworld_GetPitDestination_screen+$2D : BNE .vanilla
     LDA.b LinkFallPose : BEQ .vanilla
     LDA.b IndoorsFlag : BEQ .vanilla
     LDA.w OverworldIndexMirror : BNE .vanilla ; came in from lost woods
