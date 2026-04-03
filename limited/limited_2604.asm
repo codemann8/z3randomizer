@@ -22,6 +22,7 @@
 !BookPortalLinkLayer = $7E0279  ; 1 byte  - Link layer (BG1/BG2)
 !BookPortalBG1H     = $7E027A   ; 2 bytes - BG1 H scroll
 !BookPortalBG1V     = $7E027C   ; 2 bytes - BG1 V scroll
+!BookPortalCamBounds = $7E04E0  ; 16 bytes - Camera bounds snapshot ($0600-$060F)
 
 !BananaXPos = LimitedRunData
 !BananaYPos = LimitedRunData+10
@@ -1639,6 +1640,7 @@ PreventCollisionForNewTags:
   AND.w #$00FF
   CMP.w #$0027 : BEQ .exit
   CMP.w #$0040 : BEQ .exit ; don't check for $43 here as this check isn't chest specific
+  CMP.w #$0042 : BEQ .exit ; pull switch room - puzzle chest collision hidden until switches pulled
   CMP.w #$0044 : BEQ .exit
   CMP.w #$0045 : BEQ .exit
   CMP.w #$0046 : BEQ .exit
@@ -2860,8 +2862,8 @@ ExtendedPushBlocks:
   dw $0038, $066E  ; Slot 103 - (X=$37, Y=$0C)
   dw $0038, $056E  ; Slot 104 - (X=$37, Y=$0A)
   dw $0091, $0A0A  ; Slot 105 - (X=$05, Y=$14)
-  ; Add up to 23 more entries here (slots 105-127)
-  ; Maximum capacity: 29 entries = 116 bytes
+  ; Add up to 1 more entries here
+  ; Maximum capacity: 8 entries due to using 250-26F space
 
 ;--------------------------------------------------------------------------------
 ; InitExtendedPushBlocks
@@ -2869,7 +2871,7 @@ ExtendedPushBlocks:
 ; Replaces: LDX.b #$3E : LDA.w #$0000
 ;--------------------------------------------------------------------------------
 InitExtendedPushBlocks:
-  ; Copy extended pushblocks from ROM to SRAM
+  ; Copy extended pushblocks from ROM to RAM
   ; Can't use Y-indexed with long addressing, so use absolute addressing
   LDX.b #$00             ; ROM table offset
 .loop
@@ -3765,6 +3767,9 @@ SecretBook:
   LDA.b LinkLayer : STA.w !BookPortalLinkLayer
   LDA.b BG1H : STA.w !BookPortalBG1H
   LDA.b BG1V : STA.w !BookPortalBG1V
+  LDX.b #$0E
+  - LDA.w $0600,X : STA.l !BookPortalCamBounds,X
+    DEX : DEX : BPL -
   SEP #$20
 
   LDA.b LinkPosY   : STA.w SpritePosYLow,Y
@@ -3775,7 +3780,7 @@ SecretBook:
   ; Mark portal as active
   INC.w !BookPortalActive
   LDA.b #$37 : JSL Sound_SetSfx2PanLong ; sword charged sfx
-  BRA .skip_vanilla_sfx
+  BRL .skip_vanilla_sfx
 
 .restore_to_portal
   ; Restore Link's position and camera
@@ -3801,7 +3806,12 @@ SecretBook:
   LDA.b LinkQuadrantH : STA.b Scrap02        ; old H quadrant: 0 or 1
   LDA.b LinkQuadrantV : LSR : STA.b Scrap00  ; old V quadrant: 0 or 2 -> 0 or 1
   JSR Teleport_RecalcQuadrantsAndBounds
-  SEP #$20
+  ; Restore camera bounds snapshot - overrides RecalcQuadrantsAndBounds adjustments
+  REP #$20
+  LDX.b #$0E
+  - LDA.l !BookPortalCamBounds,X : STA.w $0600,X
+    DEX : DEX : BPL -
+  SEP #$30
 
   LDA.b #$0D : JSL Sound_SetSfx2PanLong ; powder sfx
   STZ.w !BookPortalActive
