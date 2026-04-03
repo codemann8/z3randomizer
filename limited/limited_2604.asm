@@ -1245,6 +1245,15 @@ Ganon_FakeVictory:
     LDA.b #$14 : STA.w SpriteActivity, X
     LDA.b #$04 : STA.w SpriteHitPoints, X
     LDA.b #$80 : STA.w SpriteTimer, X
+    PHX
+      LDX.b #$00
+      LDA.w $04F0 : BEQ +
+          INX
+      + LDA.w $04F0+1 : BEQ +
+          INX
+      + TXA : CMP.w $04C5 : BEQ +
+          LDA.b #$40 : STA.w $04F0+1 ; puts out glitched torch
+    + PLX
     LDA.b #$FF : STA.w SpriteGFXControl, X
     LDA.w SpriteDeflection, X : ORA.b #$80 : STA.w SpriteDeflection, X
     STZ.w SpriteTimerB, X
@@ -1328,6 +1337,7 @@ Ganon_Phase5_RelightTorches_advance:
     STZ.w SpriteAuxC, X
     STZ.w SpriteTimerB, X
     LDA.b #$20 : STA.w SpriteTimer, X
+    LDA.b #$01 : STA.w SpriteOAMProp, X
     LDA.b #$D6 : STA.w SpriteTypeTable, X
 Ganon_Phase5_RelightTorches_exit:
     RTL
