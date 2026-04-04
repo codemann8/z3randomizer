@@ -454,8 +454,9 @@ RTL
 
 Stumpy_WaitForMusic_FinalWish:
     LDA.b #$E6 : LDY.b #$00 : JSL Sprite_ShowSolicitedMessageIfPlayerFacing
-    LDA.w ItemCursor : CMP.b #$0D ; what we wrote over
-RTL 
+    LDA.l FluteEquipment : CMP.b #$02 : BCC + ; disallow shovel to activate cutscene
+    LDA.w ItemCursor : + : CMP.b #$0D ; what we wrote over
+RTL
 
 Stumpy_BecomeTree_FinalGoodbye:
     CMP.b #$03 : BNE .return
