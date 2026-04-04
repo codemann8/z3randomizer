@@ -212,6 +212,8 @@ dw $0060, $0630, $0000, $0000
 pushpc
 org $82AE8E
 JSL MasterSword_ConditionalLoadOverlay
+org $9EE08F
+JSL MasterSwordPedestal_AlternateDialogue : NOP
 pullpc
 
 ; return Z = 0 if vanilla, 1 if limited
@@ -265,6 +267,14 @@ MasterSword_ConditionalLoadOverlay:
     + LDA.w #$0000 : RTL
 .vanilla
     LDA.l OverworldEventDataWRAM, X ; what we wrote over
+    RTL
+
+MasterSwordPedestal_AlternateDialogue:
+    LDA.l !LoadedPedestalNumber : BEQ .vanilla
+        LDA.b #$59 : LDY.b #$01
+    RTL
+.vanilla
+    LDA.w $9EE038, Y : TAY : XBA ; what we wrote over
     RTL
 
 Limited_ResetOnOWTransition:
