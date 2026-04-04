@@ -1785,8 +1785,8 @@ HandleTunicTag:
   TXA : AND.b #$7F : TAX             ; X = step (strip direction bit)
   TYA                                ; restore buttons
   AND.l PatternTargetReverse, X     ; check match
+  BEQ .reset_pattern                 ; reset before LDX overwrites Z flag
   LDX.w !NewTagIndex                 ; restore X = $80|step
-  BEQ .reset_pattern
 
 .check_complete
   INX
