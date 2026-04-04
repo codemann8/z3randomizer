@@ -302,6 +302,7 @@ OWMirrorSpriteDisable:
 	    PLA : PLA : PLA : JML Sprite_6C_MirrorPortal_missing_mirror
 	+ 
     
+    lda.b OverworldIndex : and.b #$80 : bne +
     lda.l OWMode+1 : and.b #!FLAG_OW_CROSSED : beq .vanilla
         lda.l InvertedMode : beq +
             lda.b #$40
