@@ -310,6 +310,7 @@ Limited_HandlePedestalEntrances:
     + CMP.w #$005B : BNE +
         PHX : TAX : LDA.l OWTileMapAlt, X : PLX : AND.w #$0001 : BNE .exit
         ++ LDA.b LinkPosX : AND.w #$FFF8 : CMP.w #$06E8 : BNE .exit
+        LDA.b LinkPosY : AND.w #$0780 : CMP.w #$0780 : BNE .exit
         LDA.l !PedestalCollectedFlags : AND.w #$0080 : BNE .exit
         LDA.w #$0008 : BRA .load_pedestal
     + CMP.w #$005E : BNE +
