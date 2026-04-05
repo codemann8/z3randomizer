@@ -240,6 +240,13 @@ Crashed:
 	LDA.w #$01FF
 	TCS
 
+	if !FEATURE_LIMITED_RUN == 2604
+		PHP
+		SEP #$20
+			JSL $80894A ; SaveGameFile
+		PLP
+	endif
+
 	JSR ConfigurePPUForFailureReport
 	JSR ConfigureBSODVWF
 	JSR LoadBSODHexFont
