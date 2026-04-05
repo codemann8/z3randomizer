@@ -1521,6 +1521,73 @@ Ganon_MaybeEnableVulnerabilty:
 .stun_gfx
 db $0A, $05, $0F, $05
 
+; Pedestal Fat Fairy Gimmick
+pushpc
+org $88C533
+JSL Ancilla22_ItemReceipt_ReleaseCutscene : NOP
+org $86CB2E
+JSL SpriteDraw_FairyQueen
+org $86C336
+JSL Sprite_72_FairyPond_Visible
+pullpc
+
+Ancilla22_ItemReceipt_ReleaseCutscene:
+    BEQ .exit : STZ.w CutsceneFlag ; what we wrote over
+    LDA.b OverworldIndex : CMP.b #$80 : BNE .exit ; ped screen
+    LDA.b LinkPosX+1 : BNE .exit ; not at hobo
+    LDA.l !LoadedPedestalNumber : BEQ .exit
+    LDA.l !PedestalCollectedFlags : CMP.b #$FF : BNE .exit
+        PHY
+            STZ.w SpriteAITable ; guarantee one slot available
+            LDA.b #$72 : JSL Sprite_SpawnDynamically ; fat fairy
+            LDA.b #$00 : STA.w SpritePosYHigh, Y
+            LDA.b #$34 : STA.w SpritePosYLow, Y
+            LDA.b #$00 : STA.w SpritePosXHigh, Y
+            LDA.b #$68 : STA.w SpritePosXLow, Y
+            PHX
+                TYX : JSL SpritePrep_LoadProperties
+                LDA.b #$01 : STA.w SpriteAuxTable, X
+                LDA.b #$0B : STA.w SpriteCollision, X
+                LDA.b #$40 : STA.w SpriteZCoord, X
+                LDA.b #$E0 : STA.w SpriteVelocityZ, X
+                LDA.b #$80 : STA.w SpriteDeflection, X
+                STZ.w SpriteLayer, X
+            PLX
+        PLY
+.exit
+RTL
+
+SpriteDraw_FairyQueen:
+    LDA.b OverworldIndex : CMP.b #$80 : BNE .vanilla
+        LDA.b #$01
+    RTL
+.vanilla
+    LDA.l CurrentWorld ; what we wrote over
+RTL
+
+Sprite_72_FairyPond_Visible:
+    LDA.b OverworldIndex : CMP.b #$80 : BNE .vanilla
+        %JSRLongCall_Bank1D(MoveSpriteZ_bank1D, +) : +
+        LDA.b FrameCounter : AND.b #$01 : BEQ +
+        LDA.w SpriteVelocityZ, X : BEQ +
+            INC.w SpriteVelocityZ, X
+        +
+        LDA.w SpriteZCoord, X : BPL +
+            LDA.b #$00 : STA.w SpriteZCoord, X
+        +
+        JSL Sprite_CheckDamageToPlayerSameLayerLong : BCC +
+        LDA.b Joy1B_New : BPL +
+            LDA.b #$99 : LDY.b #$01 : JSL Sprite_ShowMessageUnconditional
+        +
+        JSL Sprite_CheckDamageToPlayerSameLayerLong : BCC +
+            JSL Sprite_NullifyHookshotDrag
+            STZ.b LinkSpeed
+            JSL Player_HaltDashAttackLong
+        +
+.vanilla
+    LSR #4 ; what we wrote over
+RTL
+
 ; ----- BEGIN AERINON SECTION -----
 pushpc
 ; hooks
