@@ -1540,6 +1540,7 @@ Ancilla22_ItemReceipt_ReleaseCutscene:
     LDA.l !LoadedPedestalNumber : BEQ .exit
     LDA.l !PedestalCollectedFlags : CMP.b #$FF : BNE .exit
         PHY
+            LDA.b #$0D : STA.w SFX1
             STZ.w SpriteAITable ; guarantee one slot available
             LDA.b #$72 : JSL Sprite_SpawnDynamically ; fat fairy
             LDA.b #$00 : STA.w SpritePosYHigh, Y
