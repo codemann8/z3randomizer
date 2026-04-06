@@ -1667,9 +1667,6 @@ org $878102
 org $87A470
   JSL SecretBook
 
-org $85AF7F
-db $80
-
 org $86ECC5
   JSL SliverBoomDamageUpgrade
 
