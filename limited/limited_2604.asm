@@ -3855,6 +3855,7 @@ SecretBook:
   LDA.b LinkPosY+1 : STA.w SpritePosYHigh,Y
   LDA.b LinkPosX   : STA.w SpritePosXLow,Y
   LDA.b LinkPosX+1 : STA.w SpritePosXHigh,Y
+  LDA.b #$06 : STA.w SpriteOAMProp, Y
 
   ; Mark portal as active
   INC.w !BookPortalActive
