@@ -578,4 +578,21 @@ BSODCharWidths:
 
 ;===================================================================================================
 
+;================================================================================
+; Crash Save - copies current WRAM save data to SRAM on crash
+;--------------------------------------------------------------------------------
+; CrashSave:
+; 	REP #$30
+; 	PHB
+; 	; Copy main save file: $7EF000-$7EF4FF -> $700000-$7004FF
+; 	LDA.w #$04FF
+; 	LDX.w #$F000
+; 	LDY.w #$0000
+; 	MVN $70, $7E
+; 	PLB
+; 	JSL CopyExtendedWRAMSaveFileToSRAM
+; 	JSL WriteSaveChecksumAndBackup
+; 	RTL
+;================================================================================
+
 pulltable
