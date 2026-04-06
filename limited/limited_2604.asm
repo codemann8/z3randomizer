@@ -825,9 +825,11 @@ AncillaAdd_Z1ArmosStatue:
         TXA : LSR : TAX
         LDA.w .sprite_id,X
         PHA
-            JSL Sprite_SpawnDynamically
-            BMI +
-                JSL SpritePrep_LoadProperties
+            JSL Sprite_SpawnDynamically : BMI +
+                PHX : TYX
+                    JSL SpritePrep_LoadProperties
+                PLX
+                LDA.b #$09 : STA.w SpriteCollision, Y 
             +
         PLA
     PLX
