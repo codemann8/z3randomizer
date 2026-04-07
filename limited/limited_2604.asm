@@ -1243,6 +1243,7 @@ endmacro
 ; $0E00 - SpriteTimerB - while active, this skips damage checks, but also exits Ganon code early
 ; $0F10 - SpriteTimerE - this timer allows the current routine to pause and let recoil take visual effect
 ; $0EE0 - SpriteTimerD - controls duration of floor shake
+; $0EA0 = SpriteRecoilTimer - this is a timer that counts down while Ganon is recoiling from being hit
 
 Ganon_MaybeWarpOnLink:
     ; Ganon in phase 4 has a chance to warp on Link's position
@@ -1384,6 +1385,9 @@ Ganon_Phase5_CheckDamage:
         LDA.b #$FF : STA.w SpriteHitPoints, X
         LDA.w SpriteAuxC, X : INC : CMP.b #$03 : BCS Ganon_Phase5_TargetLink_stun
             STA.w SpriteAuxC, X
+            LDA.w SpriteActivity, X : CMP.b #$18 : BNE +
+                STZ.w SpriteRecoilTimer, X
+            +
             LDA.b #$10 : STA.w SpriteTimerE, X
             CMP.w SpriteTimer, X : BCS .exit
                 STA.w SpriteTimer, X
