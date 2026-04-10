@@ -749,6 +749,7 @@ AncillaAdd_Z1ArmosStatue_gravestone:
     RTL
 AncillaAdd_Z1ArmosStatue:
     LDA.b OverworldIndex : CMP.b #$1E : BNE .gravestone
+    LDA.b LinkState : CMP.b #$11 : BEQ .gravestone
     PLA : PLA : PLA ; discard return address
     LDA.b #AncillaAdd_Z1ArmosStatue>>16 : STA.b Scrap06 : PHA : PLB
     STZ.w AncillaID, X
