@@ -49,14 +49,14 @@ InvertDPad_DPadLROnly:
 	LDA.w JOY1L : STA.b Scrap00
 	LDA.w JOY1H
 		BIT.b #$03 : BEQ + : EOR.b #$03 : + ; swap left/right
-	STA.b Scrap00
+	STA.b Scrap01
 JML InvertDPadReturn
 
 InvertDPad_DPadUDOnly:
 	LDA.w JOY1L : STA.b Scrap00
 	LDA.w JOY1H
 		BIT.b #$0C : BEQ + : EOR.b #$0C : + ; swap up/down
-	STA.b Scrap00
+	STA.b Scrap01
 JML InvertDPadReturn
 
 InvertDPad:
