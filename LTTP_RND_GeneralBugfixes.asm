@@ -169,7 +169,6 @@ incsrc decryption.asm
 incsrc hashalphabet.asm
 incsrc inverted.asm
 incsrc invertedmaps.asm
-incsrc invertedmaps2.asm
 incsrc bonktreemaps.asm
 incsrc newhud.asm
 incsrc save.asm

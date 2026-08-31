@@ -32,7 +32,7 @@ Overworld_LoadNewTiles:
 	ASL
 	TAX
 
-	LDA.l OverworldMapChangePointers2,X
+	LDA.l OverworldMapChangePointers,X
 	BNE .do_overlay
 
 .exit
@@ -454,8 +454,6 @@ Overworld_LoadNewTiles:
 
 	RTS
 
-;---------------------------------------------------------------------------------------------------
-
 ;===================================================================================================
 
 OverworldMapChangePointers:
@@ -481,20 +479,20 @@ OverworldMapChangePointers:
 	dw $0000      ; 12
 	dw $0000      ; 13
 	dw .map14     ; 14
-	dw $0000      ; 15
+	dw .map15     ; 15
 	dw $0000      ; 16
 	dw $0000      ; 17
 	dw $0000      ; 18
 	dw $0000      ; 19
-	dw $0000      ; 1A
+	dw .map1A     ; 1A
 	dw .map1B     ; 1B
 	dw $0000      ; 1C
 	dw $0000      ; 1D
-	dw $0000      ; 1E
+	dw .map1E     ; 1E
 	dw $0000      ; 1F
 	dw $0000      ; 20
 	dw $0000      ; 21
-	dw $0000      ; 22
+	dw .map22     ; 22
 	dw $0000      ; 23
 	dw $0000      ; 24
 	dw $0000      ; 25
@@ -507,11 +505,13 @@ OverworldMapChangePointers:
 	dw $0000      ; 2C
 	dw $0000      ; 2D
 	dw $0000      ; 2E
+	;dw .map2F     ; 2F
 	dw $0000      ; 2F
 	dw .map30     ; 30
 	dw $0000      ; 31
 	dw .map32     ; 32
-	dw .map33     ; 33
+	;dw .map33     ; 33
+	dw $0000      ; 33
 	dw $0000      ; 34
 	dw .map35     ; 35
 	dw $0000      ; 36
@@ -523,7 +523,7 @@ OverworldMapChangePointers:
 	dw $0000      ; 3C
 	dw $0000      ; 3D
 	dw $0000      ; 3E
-	dw $0000      ; 3F
+	dw .map3F     ; 3F
 
 	; dark world
 	dw $0000      ; 40
@@ -546,21 +546,21 @@ OverworldMapChangePointers:
 	dw $0000      ; 51
 	dw $0000      ; 52
 	dw $0000      ; 53
-	dw .map54     ; 54
+	dw $0000      ; 54
 	dw $0000      ; 55
 	dw $0000      ; 56
 	dw $0000      ; 57
 	dw $0000      ; 58
 	dw $0000      ; 59
-	dw $0000      ; 5A
+	dw .map5A     ; 5A
 	dw .map5B     ; 5B
 	dw $0000      ; 5C
 	dw $0000      ; 5D
-	dw $0000      ; 5E
+	dw .map5E     ; 5E
 	dw $0000      ; 5F
 	dw $0000      ; 60
 	dw $0000      ; 61
-	dw $0000      ; 62
+	dw .map62     ; 62
 	dw $0000      ; 63
 	dw $0000      ; 64
 	dw $0000      ; 65
@@ -584,13 +584,13 @@ OverworldMapChangePointers:
 	dw $0000      ; 77
 	dw $0000      ; 78
 	dw $0000      ; 79
-	dw $0000      ; 7A
+	dw .map7A     ; 7A
 	dw $0000      ; 7B
 	dw $0000      ; 7C
 	dw $0000      ; 7D
 	dw $0000      ; 7E
-	dw $0000      ; 7F
-	dw $0000      ; 80
+	dw .map7F     ; 7F
+	dw .map80     ; 80
 	dw $0000      ; 81
 
 ;---------------------------------------------------------------------------------------------------
@@ -599,7 +599,12 @@ OverworldMapChangePointers:
 	dw !OWW_InvertedOnly
 
 	; singles
-	dw $0034, $2BE0
+	dw $0034, $2BE0 ; portal
+
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
 
 	dw !OWW_Stripe|!OWW_Horizontal
 	dw $29B6 ; address
@@ -618,9 +623,15 @@ OverworldMapChangePointers:
 
 	dw !OWW_InvertedOnly
 
+	dw $0034, $3D4A ; portal
+
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw .map05_spiral_mimic_ledge
+
 	; singles
 	dw $0034, $21F2
-	dw $0034, $3D4A
 	dw $0116, $216E
 	dw $0126, $21F4
 
@@ -633,7 +644,7 @@ OverworldMapChangePointers:
 
 	dw !OWW_Stripe|!OWW_Horizontal
 	dw $206E ; address
-	dw $0112, $0113, $0113, $0112|!OWW_STOP
+	dw $0111, $0113, $0113, $0112|!OWW_STOP
 
 	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(2)
 	dw $0111, $20EC ; tile, start
@@ -681,6 +692,42 @@ OverworldMapChangePointers:
 	dw $22E4 ; start
 	dw $013C, $013C, $013D, $013D, $013C, $013C|!OWW_STOP
 
+.map05_spiral_mimic_ledge
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(8)
+	dw $00E3, $2BDC ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $014E, $2C5C ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
+	dw $014E, $2C64 ; tile, start
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2C60 ; start
+	dw $0139, $014B|!OWW_STOP
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $0152, $2CDC ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0152, $2CE4 ; tile, start
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2CE0 ; start
+	dw $016B, $0182|!OWW_STOP
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(8)
+	dw $022E, $2D5C ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(3)
+	dw $0230, $2DDC ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(3)
+	dw $0230, $2DE6 ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $02A6, $2DE2 ; tile, start
+
 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
@@ -688,18 +735,68 @@ OverworldMapChangePointers:
 .map07
 	dw !OWW_InvertedOnly
 
-	; singles
-	dw $0134, $269E
-	dw $0134, $26A4
-	dw $0034, $2826
+	; ledge barrier
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $251C ; start
+	dw $0163, $0152, $0152, $0152, $0152, $01F2|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $259A ; start
+	dw $0163, $011C, $011D, $011D, $011D, $011D, $011E, $01F2|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2618 ; start
+	dw $0163, $0124, $0124, $0124, $0124, $0124, $0140|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $262A ; start
+	dw $01F2, $0127, $0127, $0127, $0127, $0127, $0150|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $299A ; start
+	dw $0161, $0141, $014E, $014E, $014E, $014E, $014F, $0150|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
-	dw $021B ; tile
-	dw $259E, $25A2, $25A4, $261C
-	dw $2626, $269A, $26A8, $271A
-	dw $2728, $279A, $27A8, $281E
-	dw $2820, $2822, $2824, $2828
-	dw $289C, $28A6, $291E, $2924|!OWW_STOP
+	dw $0125 ; tile
+	dw $261C, $269A|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $0126 ; tile
+	dw $2626, $26A8|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $0139 ; tile
+	dw $289A, $291C|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $014B ; tile
+	dw $28A8, $2926|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $0152 ; tile
+	dw $2A1E, $2A24|!OWW_STOP
+
+	dw $011C, $261A
+	dw $011E, $2628
+	dw $00CE, $2896
+	dw $016A, $28AC
+	dw $0141, $291A
+	dw $014F, $2928
+	dw $0161, $2A1C
+	dw $0150, $2A26
+	dw $021B, $2620 ; moved peg
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$07
+		db $10
+		dw ReliableOWWSentinel
+
+	; replace ladder with mountainside
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $0152, $2A20 ; tile, start
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $00E3, $2AA0 ; tile, start
 
 	dw !OWW_END
 
@@ -717,6 +814,11 @@ OverworldMapChangePointers:
 .map14
 	dw !OWW_InvertedOnly
 
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
+
 	dw !OWW_Stripe|!OWW_Vertical
 	dw $2422
 	dw $02F1, $0184, $0184|!OWW_STOP
@@ -727,25 +829,46 @@ OverworldMapChangePointers:
 
 	dw !OWW_END
 
-;===================================================================================================
+;---------------------------------------------------------------------------------------------------
+
+.map15
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map1A
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$1A
+		db $02
+		dw ReliableOWWSentinel
+
+	; rocks for hardlock protection
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(2)
+	dw $02F8, $2FBC ; tile, start
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
 
 .map1B
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$1B
+		db $02
+		dw .map1B_inverted
+
+	; rocks for hardlock protection
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2FFE ; start
+	dw $039A, $039B|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2F80 ; start
+	dw $02FA, $030A, $030D|!OWW_STOP
+
+.map1B_inverted
 	dw !OWW_InvertedOnly
-
-	; singles
-	dw $0476, $2522
-	dw $04D7, $2528
-
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $2424 ; address
-	dw $0485, $0454, $0460, !OWW_SKIP
-	dw $04DD, $04E0, $04E4, $0034|!OWW_STOP
-
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $2426 ; address
-	dw $0485, $0454, $0460, !OWW_SKIP
-	dw $04DE, $04E1, $04E5, $0034|!OWW_STOP
-
 
 	; Eye removed
 	dw !OWW_ArbTileCopy
@@ -753,78 +876,33 @@ OverworldMapChangePointers:
 	dw $243E, $24BC, $24BE, $253E
 	dw $2440, $24C0, $24C2, $2540|!OWW_STOP
 
-	; new trees
+	; New trees
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2DAA ; address
+	dw $0034, $04BA, $04BB, $0034|!OWW_STOP
 
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2D2C ; address
-	dw $00B0, $0014, $0015, $00A8
-	dw $04BB, $0034|!OWW_STOP
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2DB0 ; address
+	dw $0034, $04BA, $04BB, $0034|!OWW_STOP
 
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2DAC ; address
-	dw $0089, $001C, $001D, $0076
-	dw $04BA, $0034|!OWW_STOP
+	; New HC door
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $044F, $201C ; tile, start
 
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2E2C ; address
-	dw $00F1, $004E, $004F, $00D9
-	dw $04BB|!OWW_STOP
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
+	dw $0455, $209C ; tile, start
 
-	dw !OWW_ArbTileCopy
-	dw $0034 ; tile
-	dw $28AC, $28AE
-	dw $28B0, $28CE, $28D0, $28D2
-	dw $2C2C, $2C2E, $2CB6, $2EB6
-	dw $2F30, $2F36, $2FAA, $2FB0
-	dw $2FB4, $2FB6, $3028, $302C|!OWW_STOP
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $045A, $211A ; tile, start
 
-	; TODO still need to optimize this last section ugh
-	dw $0035, $2C28
-	dw $0035, $2FAE
-	dw $0035, $302A
-	dw $0035, $3032
-	dw $007E, $2CB0
-	dw $007F, $2CB2
-	dw $0095, $2EB2
-	dw $009A, $2EAC
-	dw $009B, $2EAE
-	dw $009C, $2EB0
-	dw $00AE, $2CAC
-	dw $00AF, $2CAE
-	dw $00DA, $302E
-	dw $00E2, $2C36
-	dw $00E2, $2FA8
-	dw $00E2, $3030
-	dw $0451, $282E
-	dw $0451, $2830
-	dw $0451, $284E
-	dw $0451, $2850
-	dw $0451, $2852
-	dw $0454, $272C
-	dw $0454, $272E
-	dw $0454, $274E
-	dw $0454, $2750
-	dw $0459, $27CE
-	dw $0459, $27D0
-	dw $045E, $27AE
-	dw $045E, $27D2
-	dw $0476, $2522
-	dw $0486, $26B0
-	dw $0487, $26B2
-	dw $048E, $2730
-	dw $048F, $2732
-	dw $0494, $27B0
-	dw $0495, $27B2
-	dw $0499, $282C
-	dw $049E, $27B4
-	dw $04BA, $2CB4
-	dw $04BA, $2EB4
-	dw $04BB, $2F34
-	dw $04CA, $27AC
-	dw $04D7, $2528
-	dw $0608, $2752
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0463, $219A ; tile, start
 
-	dw !OWW_CustomCommand, .map1B_check_aga
+	; Bat hole
+	dw !OWW_SkipIfNotFlagSet
+		dl OverworldEventDataWRAM+$5B
+		db $20
+		dw .map1B_no_hole
 
 	dw $046D, $243E
 	dw $0E39, $2440
@@ -839,20 +917,38 @@ OverworldMapChangePointers:
 	dw $0491, $25C0
 
 .map1B_no_hole
-	; add sign for tower entry
-	dw $0101, $222C
-	dw $0101, $2252
+	dw $0101, $2252 ; goal sign
+
+	dw !OWW_SkipIfNotFlagSet
+		dl SwapAgaGanonsTower
+		db $01
+		dw #ReliableOWWSentinel
+
+	dw $0101, $222C ; tower entry sign
 
 	dw !OWW_END
 
-.map1B_check_aga
-	LDA.l OverworldEventDataWRAM+$5B
-	AND.w #$0020
-	BNE ++
+;---------------------------------------------------------------------------------------------------
 
-	LDY.w #.map1B_no_hole
+.map1E
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
 
-++	RTS
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map22
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$22
+		db $02
+		dw ReliableOWWSentinel
+
+	; rocks for hardlock protection
+	dw $02B9, $203C
+	dw $0309, $203E
+	dw $030E, $20BE
+
+	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 
@@ -860,208 +956,149 @@ OverworldMapChangePointers:
 	dw !OWW_InvertedOnly
 
 	; singles
-	dw $0036, $2386
-
-	dw !OWW_ArbTileCopy
-	dw $0034 ; tile
-	dw $2288, $2308, $2388, $2408
-	dw $2488, $248A|!OWW_STOP
+	dw $0034, $248A ; remove bush
+	dw $0036, $2386 ; add bush
 
 	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+; .map2F
+; 	dw !OWW_InvertedOnly
+
+; 	dw $0034, $2BB2 ; add portal
+
+; 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 .map30
 	dw !OWW_InvertedOnly
 
-	dw $0178, $224E
-	dw $00D3, $22E2
-	dw $0302, $22E4
-	dw $00AA, $2368
-	dw $00AB, $236C
-	dw $01C2, $245C
-	dw $015C, $23E0
-	dw $0218, $245E
-	dw $0162, $2460
-	dw $0105, $255A
-	dw $01D4, $24DC
-	dw $0219, $24DE
-	dw $0171, $25DE
-	dw $0166, $255E
-	dw $0766, $2560
-	dw $06E1, $27D6
-	dw $00CF, $27DA
-	dw $0034, $3D94
+	dw $0034, $3D94 ; remove portal
+
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
+
+	; Checkerboard cave mods
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
+	dw $00D1, $2052
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
+	dw $00C9, $20D2
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
+	dw $00DC, $2152
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
+	dw $00D1, $2266
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
+	dw $0721, $22E6
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
+	dw $00CC, $2366
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0384, $25E6
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(8)
+	dw $06B4, $2662
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(9)
+	dw $0165, $26E0
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2460 ; address
+	dw $00A3, $00D5, $00C5, $063D, $0384, $00AB, $0384|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2552 ; address
+	dw $06E5, $063D, $06AB, $0109, $06AA, $06AA, $06AA
+	dw $010C, $0106, $0107, $06AB, $0384|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $25D2 ; address
+	dw $06E5, $06AB, $0109, $010C, $06A7, $06A7
+	dw $06A7, $0106, $0107, $06AB|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2652 ; address
+	dw $06E5, $06AB, $010C, $0105, $0106, $0165, $0166, $0766|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $24E0 ; address
+	dw $0109, $00D5, $00C5|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $224C ; address
+	dw $00DC, $00C9, $0386, $0759|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $21CE ; address
+	dw $0153, $0153, $0153, $0256, $0757, $0759|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2150 ; address
+	dw $0153, $0178, $0153, $0256, $06AB, $06AB, $0757, $0759|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $26D2 ; address
+	dw $06E5, $06E5, $06E5, $0759|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $26D6 ; address
+	dw $00D5, $00D5, $00D5, $00D5, $01E9|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $26D8 ; address
+	dw $00C4, $00CF, $0302, $00C5|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $20DE ; address
+	dw $00D0, $00C8, $00CA, $00C8, $00DB|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2160 ; address
+	dw $00D0, $00C8, $00CA, $00C8, $00DB, $009E|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $21E2 ; address
+	dw $00D0, $00C8, $00CA, $00D3, $00CE|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2264 ; address
+	dw $00D0, $00C8, $0302, $00C5|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $06AB
+	dw $23D2, $23E6, $2452, $2454, $24D4
+	dw $24E6, $26D4, $2754, $27D4|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $00D2
+	dw $205E, $20E0, $2162, $21E4, $275C|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
 	dw $017E
 	dw $2050, $20CE|!OWW_STOP
 
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $00D1, $2052
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
-	dw $00D1, $21E6
-
-	dw !OWW_ArbTileCopy
-	dw $00D2
-	dw $2060, $20E2, $2164|!OWW_STOP
-
 	dw !OWW_ArbTileCopy
 	dw $0183
 	dw $20D0, $214E|!OWW_STOP
 
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $00C9, $20D2
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $00C9, $2152
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
-	dw $00C9, $2266
-	dw $00C9, $22CC
-
-	dw !OWW_ArbTileCopy
-	dw $00D0
-	dw $20E0, $2162, $21E4|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(3)
-	dw $0153, $2150
-
-	dw !OWW_ArbTileCopy
-	dw $0153
-	dw $21CE, $22CE|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $00C8
-	dw $2160, $21E2, $2264, $28DA, $295C|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $00CA
-	dw $21E0, $2262, $285A, $28DC|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $00DC, $21D2
-	dw $00DC, $224C
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(2)
-	dw $00E3, $2252
-
-	dw !OWW_ArbTileCopy
-	dw $0186
-	dw $22D0, $234E|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
-	dw $0034, $22D2
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(7)
-	dw $0034, $22D4
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(7)
-	dw $0034, $22D6
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $0034, $2350
-
-	dw !OWW_ArbTileCopy
-	dw $0034
-	dw $2458, $2656|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
-	dw $00CC, $22E6
-	dw $00CC, $234C
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $00CE, $2362
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
-	dw $00CE, $25D8
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $00C5, $2364
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
-	dw $00C5, $25DC
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
-	dw $06AB, $2366
-
-	dw !OWW_ArbTileCopy
-	dw $06AB
-	dw $24E4, $2760|!OWW_STOP
-
 	dw !OWW_ArbTileCopy
 	dw $0384
-	dw $236A, $236E, $23EC, $246A|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
-	dw $0384, $24E8
-
-	dw !OWW_ArbTileCopy
-	dw $0759
-	dw $23C8, $244A, $24CC, $254E, $26D0, $2752, $27D4|!OWW_STOP
+	dw $24D8, $24EA|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
 	dw $0757
-	dw $23CA, $244C, $24CE, $2550, $26D2, $2754|!OWW_STOP
+	dw $24D2, $2854|!OWW_STOP
 
-	dw !OWW_ArbTileCopy
-	dw $01FF
-	dw $23CC, $244E, $24D0, $2652, $26D4, $2756|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $017C
-	dw $23CE, $2450, $24D2, $2654, $26D6|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0100
-	dw $245A, $24D8|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0104
-	dw $24DA, $2558|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0106
-	dw $2462, $24E0, $255C|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0107
-	dw $2464, $24E2|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $0179, $2552
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(8)
-	dw $06B4, $2562
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $06E5, $25D0
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
-	dw $00C4, $25DA
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $0165, $25E4
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $06E4, $27D2
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $06E4, $2854
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(3)
-	dw $06E4, $2856
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $06E4, $2958
-	dw $06E4, $29DA
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $02FD, $27D8
-
-	dw !OWW_ArbTileCopy
-	dw $06E7
-	dw $28D8, $295A, $29DC|!OWW_STOP
+	dw $00AB, $2352
+	dw $0171, $26DE
+	dw $0759, $28D4
 
 	dw !OWW_END
 
@@ -1070,154 +1107,121 @@ OverworldMapChangePointers:
 .map32
 	dw !OWW_InvertedOnly
 
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $2486
-	dw $01D5, $0165, $00C6|!OWW_STOP
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
 
+	; Cave 45 mods
+	dw $01D5, $2486
+	dw $0165, $2506
 	dw $0166, $2508
-	dw $0171, $2588
+	dw $0220, $278C
+	dw $075E, $299A
+	dw $00AB, $299C
+	dw $0BDB, $2C0A
 
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(5)
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2586
+	dw $00C6, $0171, $0166|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2A1A
+	dw $075F, $00C6, $01E5, $077E|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2A9A
+	dw $0775, $01E5, $077E, $0106, $0165|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2B1A
+	dw $075F, $077E, $0106, $0107, $00C6|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2B9C
+	dw $00D5, $00C5, $00C6|!OWW_STOP
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
+	dw $009F, $2812
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
+	dw $06E1, $2890
+
+	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0034, $29A2
+
+	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
 	dw $00C6, $2608
 
-	dw $0166, $258A
-	dw $016A, $278C
-	dw $016A, $280C
-	dw $00C6, $2806
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(5)
+	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
 	dw $021C, $260A
 
 	dw !OWW_ArbTileCopy
+	dw $0167
+	dw $2488, $250A, $258C, $2A28, $2AAA, $2B2C, $2BAE|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $0160
+	dw $248A, $250C, $2A2A, $2AAC, $2B2E|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $017C
+	dw $270E, $2790, $281A, $289C, $291E, $29A0|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $01FF
+	dw $278E, $2810, $289A, $291C, $299E|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $0757
+	dw $280E, $2898, $291A|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
 	dw $0034
-	dw $270E, $278E, $2790, $2918, $291A, $2998, $299A, $291C, $291E, $2920|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(8)
-	dw $0034, $280E
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $0034, $2892
-
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $288C
-	dw $01FA, $0034, $00DA|!OWW_STOP
-
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $290C
-	dw $0186
-	dw $0034, $0034, $0034
-	dw $0036, $0036|!OWW_STOP
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(7)
-	dw $0034, $2818
-
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2986
-	dw $00E4, $00E5, $0186
-	dw $0034, $0034, $0034, $0034
-	dw $0036, $0036
-	dw $0034, $0034
-	dw $00DA
-	dw $0034, $0034
-	dw $0100|!OWW_STOP
-
-	dw $0186, $2A04
-
-	; a couple of these will be overwritten in a second
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(13)
-	dw $0034, $2A06
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(13)
-	dw $0034, $2A84
-
-	; leave these after the above
-	dw $0071, $2A0E
-	dw $0071, $2A1A
-	dw $0035, $2A8C
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(5)
-	dw $0034, $2B84
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(6)
-	dw $0034, $2C86
+	dw $281C, $289E, $2920|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
-	dw $0034 ; tile
-	dw $2B06, $2B0A, $2B0E, $2B12
-	dw $2B1A, $2B92, $2B94
-	dw $2B98, $2B9A, $2C04, $2C08
-	dw $2C0A, $2C0E, $2C12, $2C14
-	dw $2C18, $2C98
-	dw $2D0A, $2D0C, $2D10, $2D14
-	dw $2D16, $2D8A, $2D8C, $2D8E
-	dw $2C94, $2C92, $2B8E
-	dw $2D94|!OWW_STOP
+	dw $0759
+	dw $288E, $2918, $2B9A|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
-	dw $0035 ; tile
-	dw $2B08, $2C06, $2D0E, $2D90|!OWW_STOP
-
-	dw $0104, $2A22
-	dw $01D4, $2A24
-	dw $00F8, $2C1A
-	dw $00CE, $2C1C
-	dw $0071, $2C8C
-	dw $00CE, $2C9C
-	dw $0167, $2D04
-	dw $0036, $2D12
-	dw $0167, $2D86
-	dw $0172, $2E08
-	dw $0174, $2E16
+	dw $02EC
+	dw $2A8A, $2A8E, $2A92, $2A94, $2A96, $2C0C|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
-	dw $00DA ; tile
-	dw $2B14, $2B16, $2B18, $2B96
-	dw $2C16, $2C96, $2D08, $2D92|!OWW_STOP
+	dw $0789
+	dw $2B0A, $2B0E, $2B14, $2B94|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
-	dw $00E2 ; tile
-	dw $2B04, $2B0C, $2B10, $2B8C, $2B90
-	dw $2C0C, $2C10, $2C8E|!OWW_STOP
+	dw $02EB
+	dw $2B12, $2B16, $2C8C, $2C94|!OWW_STOP
 
 	dw !OWW_ArbTileCopy
-	dw $015C ; tile
-	dw $2A20, $2A9E, $2B1C, $2C9A, $2D18
-	dw $2D96|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $015E ; tile
-	dw $2E0A, $2E0C, $2E0E, $2E10
-	dw $2E12, $2E14|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0160 ; tile
-	dw $2C84, $2D06, $2D88|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0162 ; tile
-	dw $2AA0, $2B1E, $2B9C, $2D1A
-	dw $2D98|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $016A ; tile
-	dw $2A82, $2B02, $2B82, $2C02
-	dw $2C82|!OWW_STOP
+	dw $0BDC
+	dw $2B8A, $2B8E, $2C0E, $2C14|!OWW_STOP
 
 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 
-.map33
-	dw !OWW_InvertedOnly
+; .map33
+; 	dw !OWW_InvertedOnly
 
-	dw $0034, $22A8
+; 	dw $0034, $22A8 ; remove portal
 
-	dw !OWW_END
+; 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 
 .map35
 	dw !OWW_InvertedOnly
+
+	dw $0034, $2F56 ; remove portal
+
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
 
 	dw !OWW_Stripe|!OWW_Vertical
 	dw $2BB0
@@ -1227,8 +1231,6 @@ OverworldMapChangePointers:
 	dw $2BB2
 	dw $02F2, $0185, $0393, $0395|!OWW_STOP
 
-	dw $0034, $2F56
-
 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
@@ -1236,21 +1238,13 @@ OverworldMapChangePointers:
 .map3A
 	dw !OWW_InvertedOnly
 
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2800
-	dw $0774, $06E1, $0757|!OWW_STOP
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
 
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2880
-	dw $0779, $02EC, $0759, $0757|!OWW_STOP
-
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2900
-	dw $02E5, $02E5, $02E5, $0759, $076A|!OWW_STOP
-
-	dw !OWW_Stripe|!OWW_Horizontal
-	dw $2980
-	dw $02F3, $02F3, $02F1, $02F2, $038A|!OWW_STOP
+	dw $0964, $2984
+	dw $017E, $2986
 
 	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(4)
 	dw $0184, $2A04
@@ -1262,40 +1256,89 @@ OverworldMapChangePointers:
 
 ;---------------------------------------------------------------------------------------------------
 
-.map43
-	dw !OWW_SkipIfInverted, .map43_inverted
-	dw $0101, $2550 ; GT sign
+.map3F
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$3F
+		db $02
+		dw ReliableOWWSentinel
 
-	.map43_inverted
-	dw !OWW_InvertedOnly
+	dw !OWW_SkipIfFlagSet
+		dl OWTileWorldAssoc+$3F
+		db $40
+		dw ReliableOWWSentinel
 
-	dw $0212, $2BE0
+	dw !OWW_StripeRLEINC|!OWW_Vertical|OWW_RLESize(2)
+	dw $075C, $2A9A ; tile, start
 
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(5)
-	dw $0E96, $235E
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2A22
+	dw $0752, $0753, $02E5|!OWW_STOP
 
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(5)
-	dw $0E97, $2360
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2A9E
+	dw $0774, $06E1, $0757, $06E3, $02E5|!OWW_STOP
 
-	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(2)
-	dw $0E94, $25DE ; tile, start
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2B1E
+	dw $076E, $02E5, $0759, $0779|!OWW_STOP
 
-	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(2)
-	dw $0180, $275E
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2B9E
+	dw $076C, $02EC, $06F5, $0705|!OWW_STOP
 
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $0184, $27DE
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2C1E
+	dw $0704, $06F6, $06F7, $06E3|!OWW_STOP
 
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(2)
-	dw $0185, $27E0
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2CA2
+	dw $0762, $0773|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $02EC ; tile
+	dw $29A4, $2C16|!OWW_STOP
+
+	dw $075E, $2B9A
+	dw $076F, $2C1A
 
 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
+
+.map43
+	dw !OWW_SkipIfFlagSet
+		dl SwapAgaGanonsTower
+		db $01
+		dw .map43_atgt_swapped
+
+	dw $0101, $2550 ; GT sign
+	dw !OWW_SkipAhead, .map43_inverted
+
+.map43_atgt_swapped
+	; GT entrance auto-opened
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $235E ; start
+	dw $08D5, $08E3, $0E90, $0E96, $0E96, $0E94|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2360 ; start
+	dw $08D6, $08E4, $0E91, $0E97, $0E97, $0E95|!OWW_STOP
+
+.map43_inverted
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_InvertedOnly
+
+	dw $0212, $2BE0 ; add portal
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
 .map45
 	dw !OWW_InvertedOnly
 
-	dw $0239, $3D4A
+	dw $0239, $3D4A ; add portal
 
 	dw !OWW_END
 
@@ -1304,12 +1347,20 @@ OverworldMapChangePointers:
 .map47
 	dw !OWW_InvertedOnly
 
+	; portals
+	dw $0239, $269E
+	dw $0239, $26A4
+
+	dw !OWW_SkipIfFlagSet
+		dl WarningFlags
+		db $20
+		dw ReliableOWWSentinel
+
+	; Turtle tail hop
 	dw $0398, $25A0
 	dw $0522, $25A2
 	dw $0125, $2620
 	dw $0126, $2622
-	dw $0239, $269E
-	dw $0239, $26A4
 
 	dw !OWW_END
 
@@ -1318,22 +1369,21 @@ OverworldMapChangePointers:
 .map50
 	dw !OWW_InvertedOnly
 
-	dw $020F, $2B2E
+	dw $020F, $2B2E ; add portal
 
 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 
-.map54
-	dw !OWW_InvertedOnly
+.map5A
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$5A
+		db $02
+		dw ReliableOWWSentinel
 
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $2422
-	dw $02F3, $00C9, $00E3|!OWW_STOP
-
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $2424
-	dw $02F3, $00C9, $00E3|!OWW_STOP
+	; rocks for hardlock protection
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(2)
+	dw $02F8, $2FBC ; tile, start
 
 	dw !OWW_END
 
@@ -1341,14 +1391,34 @@ OverworldMapChangePointers:
 
 ; Pyramid
 .map5B
-	dw !OWW_SkipIfInverted, .map5B_inverted_mode
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$5B
+		db $02
+		dw .map5B_continue
+
+	; rocks for hardlock protection
+	dw !OWW_Stripe|!OWW_Vertical
+	dw $2F80 ; start
+	dw $02FA, $030A, $030D|!OWW_STOP
+
+	dw !OWW_StripeRLEINC|!OWW_Vertical|OWW_RLESize(2)
+	dw $039A, $2FFE ; tile, start
+
+.map5B_continue
+	dw !OWW_SkipIfInverted, .map5B_inverted
 
 	dw $0101, $27B6 ; sign to statue
 	dw $05C2, $27B4 ; peg left of sign
 
-.map5B_inverted_mode
 	dw !OWW_InvertedOnly
 
+.map5B_inverted
+	; Seal pyramid entrance
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2E1C
+	dw $0A06, $0A0E|!OWW_STOP
+
+	; South pyramid terrain 
 	dw $0323, $39B6
 
 	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
@@ -1376,32 +1446,8 @@ OverworldMapChangePointers:
 	dw $3BB6, $3BBA, $3BBC, $3C3A
 	dw $3C3C, $3C3E|!OWW_STOP
 
-
-	; pegs
-	dw !OWW_ArbTileCopy
-	dw $0034 ; tile
-	dw $321C, $329C, $32A0|!OWW_STOP
-
-	dw $00E2, $321A
-	dw $0071, $321E
-	dw $00DA, $3220
-
-	dw $00DA, $329A
-	dw $00E1, $329E
-
-	dw $0382, $3318
-	dw $037C, $3322
-
 	dw $00F2, $3BB8
 	dw $0108, $3C38
-
-	dw !OWW_ArbTileCopy
-	dw $021B ; tile
-	dw $3218, $3222, $3298, $32A2
-	dw $331A, $331C, $331E, $3320|!OWW_STOP
-
-
-	dw !OWW_CustomCommand, .map5B_pick_warp_tile
 
 	dw !OWW_Stripe|!OWW_Horizontal
 	dw $39C0 ; start
@@ -1438,6 +1484,8 @@ OverworldMapChangePointers:
 	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(17)
 	dw $010B, $3C46
 
+	dw !OWW_CustomCommand, .map5B_pick_warp_tile
+
 	dw !OWW_END
 
 .map5B_pick_warp_tile
@@ -1456,10 +1504,32 @@ OverworldMapChangePointers:
 
 ;---------------------------------------------------------------------------------------------------
 
+.map5E
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map62
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$62
+		db $02
+		dw ReliableOWWSentinel
+
+	; rocks for hardlock protection
+	dw $02B9, $203C
+	dw $0309, $203E
+	dw $030E, $20BE
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
 .map6F
 	dw !OWW_InvertedOnly
 
-	dw $020F, $2BB2
+	dw $020F, $2BB2 ; add portal
 
 	dw !OWW_END
 
@@ -1468,7 +1538,7 @@ OverworldMapChangePointers:
 .map70
 	dw !OWW_InvertedOnly
 
-	dw $0239, $3D94
+	dw $0239, $3D94 ; add portal
 
 	dw !OWW_END
 
@@ -1477,7 +1547,7 @@ OverworldMapChangePointers:
 .map73
 	dw !OWW_InvertedOnly
 
-	dw $020F, $22A8
+	dw $020F, $22A8 ; add portal
 
 	dw !OWW_END
 
@@ -1486,35 +1556,99 @@ OverworldMapChangePointers:
 .map75
 	dw !OWW_InvertedOnly
 
-	; singles
-	dw $0239, $2F50
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
-	dw $0BA3, $3054
-
-	dw !OWW_StripeRLE|!OWW_Horizontal|OWW_RLESize(4)
-	dw $0BA3, $3254
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(3)
-	dw $0BAD, $30D6
-
-	dw !OWW_StripeRLE|!OWW_Vertical|OWW_RLESize(3)
-	dw $0BA9, $30D8
-
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $30D4 ; start
-	dw $0BAC, $0BC5, $0BCA|!OWW_STOP
-
-	dw !OWW_Stripe|!OWW_Vertical
-	dw $30DA ; start
-	dw $0BAA, $0BC8, $0BCD|!OWW_STOP
-
-	dw !OWW_ArbTileCopy
-	dw $0BA3 ; tile
-	dw $2F52, $2FCE, $2FD0|!OWW_STOP
+	dw $0239, $3352 ; add portal
 
 	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 
+.map7A
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map7F
+	dw !OWW_SkipIfNotFlagSet
+		dl OWTileMapAlt+$7F
+		db $02
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OWTileWorldAssoc+$7F
+		db $40
+		dw ReliableOWWSentinel
+
+	dw !OWW_StripeRLEINC|!OWW_Vertical|OWW_RLESize(2)
+	dw $075C, $2A9A ; tile, start
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2A22
+	dw $0752, $0753, $02E5|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2A9E
+	dw $0774, $06E1, $0757, $06E3, $02E5|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2B1E
+	dw $076E, $02E5, $0759, $0779|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2B9E
+	dw $076C, $02EC, $06F5, $0705|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2C1E
+	dw $0704, $06F6, $06F7, $06E3|!OWW_STOP
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2CA2
+	dw $0762, $0773|!OWW_STOP
+
+	dw !OWW_ArbTileCopy
+	dw $02EC ; tile
+	dw $29A4, $2C16|!OWW_STOP
+
+	dw $075E, $2B9A
+	dw $076F, $2C1A
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map80
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
 ;===================================================================================================
+
+Overworld_InvertedTRPuzzle:
+{
+    REP #$30
+    LDA.l OWTileMapAlt+07 : AND.w #$00FF : BNE .inverted
+        LDA.w #$0212 : LDX.w #$0720 : STA.l TileMapA,X ; what we wrote over
+        JSL Overworld_MemorizeMap16Change : JSL Overworld_DrawPersistentMap16+4 ; what we wrote over
+        RTL
+
+    ; removes barriers from TR Peg Puzzle Ledge
+    .inverted
+    LDA.w #$0184 : LDX.w #$0A20 : JSL Overworld_DrawPersistentMap16
+    LDA.w #$0184 : LDX.w #$0AA0 : JSL Overworld_DrawPersistentMap16
+    LDA.w #$0185 : LDX.w #$0A22 : JSL Overworld_DrawPersistentMap16
+    LDA.w #$0185 : LDX.w #$0AA2 : JSL Overworld_DrawPersistentMap16
+    RTL
+}
+
+Overworld_OtherTileChanges:
+{
+	if !FEATURE_LIMITED_RUN == 2604
+		PHX : PHY : PHB
+		PEA.w $7E00 : PLB : PLB
+			JSL Limited_OverworldPedestalTileChanges
+		PLB : PLY : PLX
+	endif
+	RTS
+}
