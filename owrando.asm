@@ -540,6 +540,7 @@ LoadMapOppositeWorld:
     JSL OverworldMap_InitGfx+$10 ; load palette
         DEC.w SubModuleInterface
         LDA.b #$0F : STA.b INIDISPQ
+        LDA.b #$01 : STA.w SkipOAM ; InitGfx INCs this, keep it from wrapping to 0
     JSL LoadMapDarkOrCustom_long
     LDA.b #$24 : STA.w SFX3
     PLA : PLA : PEA.w $BBAF ; skip everything upon return
