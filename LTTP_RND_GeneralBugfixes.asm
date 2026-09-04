@@ -214,6 +214,10 @@ incsrc stats/main.asm
 incsrc stats/statConfig.asm
 FontTable:
 incsrc stats/fonttable.asm
+warnpc $A3B000
+org $A3B000
+incsrc owstaticmaps.asm
+warnpc $A48000
 
 incsrc doorrando/doorrando.asm ; bank 27/A7
 ;bank 28/A8 for keydropshuffle / standing items
@@ -345,7 +349,7 @@ warnpc $B08000
 ;$20 Code Bank
 ;$21 Reserved (Frame Hook & Init)
 ;$22 Unused
-;$23 Stats & Credits
+;$23 Stats & Credits & Static OW Tile Changes
 ;$24 Code Bank
 ;$25 GFX/SFX Overrides
 ;$26 Multiworld data
