@@ -7,8 +7,8 @@
 ; Use OverworldStaticOWWSentinel ($A3B104) as skip-to-end.
 ;
 ; The generator owns this blob; asar ships an empty pointer table.
-; Referenced by the generator. Do not move.
-; SNES $A3B000 / PC 0x11B000
+; Referenced by the generator. Do not move. Reserved $2000 bytes.
+; SNES $A3B000 - $A3CFFF
 ;===================================================================================================
 
 OverworldStaticMapPointers:
@@ -149,7 +149,8 @@ OverworldStaticMapPointers:
 	dw $0000      ; 81
 
 ; this space is reserved for the generator to provide
-; should allow for an estimated max $2000 bytes
+; should allow for an maximum of $2000 bytes (including table)
 ; inverted changes alone account for ~$800 bytes
+; inverted + disabled edges account for ~$1000 bytes
 OverworldStaticMapData:
 print "Static OWW data: ", pc

@@ -216,7 +216,8 @@ incsrc stats/fonttable.asm
 warnpc $A3B000
 org $A3B000
 incsrc owstaticmaps.asm
-warnpc $A48000
+warnpc $A3D000
+org $A3D000
 
 incsrc doorrando/doorrando.asm ; bank 27/A7
 ;bank 28/A8 for keydropshuffle / standing items
