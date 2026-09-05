@@ -49,7 +49,6 @@ Overworld_LoadNewTiles:
 	JSR .do_overlay
 
 	PLB
-	JSL Overworld_LoadBonkTiles
 
 	LDX.w #$001E
 	LDA.w #$0DBE
@@ -479,7 +478,7 @@ Overworld_LoadNewTiles:
 
 OverworldMapChangePointers:
 	; light world
-	dw $0000      ; 00
+	dw .map00     ; 00
 	dw $0000      ; 01
 	dw $0000      ; 02
 	dw $0000      ; 03
@@ -489,26 +488,26 @@ OverworldMapChangePointers:
 	dw .map07     ; 07
 	dw $0000      ; 08
 	dw $0000      ; 09
-	dw $0000      ; 0A
+	dw .map0A     ; 0A
 	dw $0000      ; 0B
 	dw $0000      ; 0C
 	dw $0000      ; 0D
 	dw $0000      ; 0E
 	dw $0000      ; 0F
-	dw $0000      ; 10
+	dw .map10     ; 10
 	dw $0000      ; 11
-	dw $0000      ; 12
-	dw $0000      ; 13
+	dw .map12     ; 12
+	dw .map13     ; 13
 	dw $0000      ; 14
 	dw .map15     ; 15
-	dw $0000      ; 16
+	dw .map16     ; 16
 	dw $0000      ; 17
-	dw $0000      ; 18
+	dw .map18     ; 18
 	dw $0000      ; 19
-	dw $0000      ; 1A
+	dw .map1A     ; 1A
 	dw .map1B     ; 1B
 	dw $0000      ; 1C
-	dw $0000      ; 1D
+	dw .map1D     ; 1D
 	dw .map1E     ; 1E
 	dw $0000      ; 1F
 	dw $0000      ; 20
@@ -521,15 +520,15 @@ OverworldMapChangePointers:
 	dw $0000      ; 27
 	dw $0000      ; 28
 	dw $0000      ; 29
-	dw $0000      ; 2A
-	dw $0000      ; 2B
+	dw .map2A     ; 2A
+	dw .map2B     ; 2B
 	dw $0000      ; 2C
 	dw $0000      ; 2D
-	dw $0000      ; 2E
+	dw .map2E     ; 2E
 	dw $0000      ; 2F
 	dw $0000      ; 30
 	dw $0000      ; 31
-	dw $0000      ; 32
+	dw .map32     ; 32
 	dw $0000      ; 33
 	dw $0000      ; 34
 	dw $0000      ; 35
@@ -547,7 +546,7 @@ OverworldMapChangePointers:
 	; dark world
 	dw $0000      ; 40
 	dw $0000      ; 41
-	dw $0000      ; 42
+	dw .map42     ; 42
 	dw .map43     ; 43
 	dw $0000      ; 44
 	dw $0000      ; 45
@@ -564,12 +563,12 @@ OverworldMapChangePointers:
 	dw $0000      ; 50
 	dw $0000      ; 51
 	dw $0000      ; 52
-	dw $0000      ; 53
+	dw .map53     ; 53
 	dw $0000      ; 54
-	dw $0000      ; 55
-	dw $0000      ; 56
+	dw .map55     ; 55
+	dw .map56     ; 56
 	dw $0000      ; 57
-	dw $0000      ; 58
+	dw .map58     ; 58
 	dw $0000      ; 59
 	dw $0000      ; 5A
 	dw .map5B     ; 5B
@@ -591,7 +590,7 @@ OverworldMapChangePointers:
 	dw $0000      ; 6B
 	dw $0000      ; 6C
 	dw $0000      ; 6D
-	dw $0000      ; 6E
+	dw .map6E     ; 6E
 	dw $0000      ; 6F
 	dw $0000      ; 70
 	dw $0000      ; 71
@@ -611,6 +610,53 @@ OverworldMapChangePointers:
 	dw $0000      ; 7F
 	dw .map80     ; 80
 	dw $0000      ; 81
+
+;---------------------------------------------------------------------------------------------------
+; Bonk/green tree helpers (4x4)
+;---------------------------------------------------------------------------------------------------
+macro OWW_BonkTree(start)
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0364, <start>
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0368, <start>+$80
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $036E, <start>+$100
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0375, <start>+$180
+endmacro
+
+macro OWW_GreenTree(start)
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw <start>
+	dw $00AE, $00AF, $007E, $007F|!OWW_STOP
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw <start>+$80
+	dw $00B0, $0014, $0015, $00A8|!OWW_STOP
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw <start>+$100
+	dw $0089, $001C, $001D, $0076|!OWW_STOP
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw <start>+$180
+	dw $00F1, $004E, $004F, $00D9|!OWW_STOP
+endmacro
+
+;---------------------------------------------------------------------------------------------------
+
+.map00
+	; lost woods bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$00
+		db $10
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($31D0)
+
+	dw !OWW_END
 
 ;---------------------------------------------------------------------------------------------------
 
@@ -633,7 +679,236 @@ OverworldMapChangePointers:
 
 ;---------------------------------------------------------------------------------------------------
 
+.map0A
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; north tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$0A
+		db $10
+		dw .map0A_south
+
+	%OWW_BonkTree($2118)
+
+.map0A_south
+	; south tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$0A
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($2C30)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map10
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; west tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$10
+		db $10
+		dw .map10_east
+
+	%OWW_BonkTree($250C)
+
+.map10_east
+	; east tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$10
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($26AC)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map12
+	; bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$12
+		db $10
+		dw ReliableOWWSentinel
+
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2426
+	dw $0364, $0365, $064F, $0652|!OWW_STOP
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $24A6
+	dw $0368, $0369, $036A, $0655|!OWW_STOP
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $036E, $2526
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(4)
+	dw $0375, $25A6
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map13
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; ledge tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$13
+		db $10
+		dw .map13_east
+
+	%OWW_BonkTree($250C)
+
+.map13_east
+	; east tree (green when collected)
+	dw !OWW_SkipIfNotFlagSet
+		dl OverworldEventDataWRAM+$13
+		db $08
+		dw .map13_west
+
+	%OWW_GreenTree($23AE)
+
+.map13_west
+	; west tree (always green)
+	%OWW_GreenTree($23A2)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map15
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw .map15_other
+
+	; southwest tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$15
+		db $10
+		dw .map15_east
+
+	%OWW_BonkTree($2C06)
+
+.map15_east
+	; east bank tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$15
+		db $08
+		dw .map15_other
+
+	%OWW_BonkTree($26B4)
+
+.map15_other
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map16
+	; non-bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	%OWW_GreenTree($281E)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map18
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; northwest tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$18
+		db $10
+		dw .map18_southeast
+
+	%OWW_BonkTree($242C)
+
+.map18_southeast
+	; southeast tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$18
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($38EA)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map1A
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; southwest tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$1A
+		db $10
+		dw .map1A_central
+
+	%OWW_BonkTree($2B10)
+
+.map1A_central
+	; central tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$1A
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($2798)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
 .map1B
+	; bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw .map1B_inverted
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$1B
+		db $10
+		dw .map1B_inverted
+
+	%OWW_BonkTree($29AA)
+
+.map1B_inverted
 	dw !OWW_InvertedOnly
 
 	; Bat hole
@@ -658,7 +933,357 @@ OverworldMapChangePointers:
 
 ;---------------------------------------------------------------------------------------------------
 
+.map1D
+	; bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$1D
+		db $10
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($2212)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map1E
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw .map1E_other
+
+	; two northeast trees
+	%OWW_GreenTree($36E6)
+	%OWW_GreenTree($375E)
+
+	; tree cluster
+	dw !OWW_ArbTileCopy
+	dw $0000
+	dw $3954, $395A, $3C54|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0001
+	dw $3950, $3956, $3C50|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0002
+	dw $3952, $3958, $3C52|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $000B
+	dw $39D0, $39D6|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0011
+	dw $38D0, $38D6, $3BD0|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0012
+	dw $38D2, $38D8, $3BD2|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0013
+	dw $38D4, $38DA, $3BD4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0014
+	dw $3A4E, $3A54|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0015
+	dw $3A50, $3A56|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $001C
+	dw $3ACE, $3AD4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $001D
+	dw $3AD0, $3AD6|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0026
+	dw $3852, $3858, $3B52|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0078
+	dw $3854, $385A|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $007C
+	dw $395C, $3C56|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0082
+	dw $39DA, $3CD4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00B6
+	dw $3850, $3856|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00BE
+	dw $394E, $3C4E|!OWW_STOP
+	dw $0006, $3B4E
+	dw $0007, $3B50
+	dw $0009, $3B54
+	dw $000A, $39D4
+	dw $000C, $39D2
+	dw $000D, $39D8
+	dw $0016, $3A52
+	dw $001E, $3AD2
+	dw $0025, $3CD2
+	dw $0031, $3B56
+	dw $0076, $3AD8
+	dw $0079, $385C
+	dw $007B, $38DC
+	dw $0083, $3CD0
+	dw $0089, $3ACC
+	dw $0094, $3BD6
+	dw $00A8, $3A58
+	dw $00AE, $39CC
+	dw $00AF, $39CE
+	dw $00B0, $3A4C
+	dw $00B5, $384E
+	dw $00B9, $38CE
+	dw $00D9, $3B58
+	dw $00DE, $3BCE
+	dw $00F1, $3B4C
+
+	; bonk tree (green when collected)
+	dw !OWW_SkipIfNotFlagSet
+		dl OverworldEventDataWRAM+$1E
+		db $10
+		dw .map1E_other
+
+	%OWW_GreenTree($3AC2)
+
+.map1E_other
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map2A
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; south tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$2A
+		db $10
+		dw .map2A_se
+
+	%OWW_BonkTree($2B1C)
+
+.map2A_se
+	; southeast tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$2A
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($2928)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map2B
+	; bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$2B
+		db $10
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($25AA)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map2E
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; tree 2
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$2E
+		db $10
+		dw .map2E_tree4
+
+	%OWW_BonkTree($2396)
+
+.map2E_tree4
+	; tree 4
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$2E
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($24A6)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map32
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; southeast tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$32
+		db $10
+		dw .map32_northeast
+
+	%OWW_BonkTree($2830)
+
+.map32_northeast
+	; northeast tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$32
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($23B2)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map42
+	; bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$42
+		db $10
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($2A0A)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map43
+.map7A
+.map80
+	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map53
+	; non-bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	%OWW_GreenTree($2422)
+	%OWW_GreenTree($242E)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map55
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; west bank tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$55
+		db $10
+		dw .map55_east
+
+	%OWW_BonkTree($2C12)
+
+.map55_east
+	; east bank tree
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$55
+		db $08
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($26B4)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map56
+	; bonk tree
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$56
+		db $10
+		dw ReliableOWWSentinel
+
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(5)
+	dw $0640, $2604
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(5)
+	dw $0645, $2684
+	dw !OWW_StripeRLEINC|!OWW_Horizontal|OWW_RLESize(5)
+	dw $064A, $2704
+	dw !OWW_Stripe|!OWW_Horizontal
+	dw $2786
+	dw $0662, $0663, $0653|!OWW_STOP
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map58
+	; non-bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	%OWW_GreenTree($242C)
+	%OWW_GreenTree($38EA)
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
 .map5B
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw .map5B_inverted
+
+	; east tree (non-bonk)
+	%OWW_GreenTree($344C)
+
+	; west tree (green when collected)
+	dw !OWW_SkipIfNotFlagSet
+		dl OverworldEventDataWRAM+$5B
+		db $10
+		dw .map5B_inverted
+
+	%OWW_GreenTree($342C)
+
+.map5B_inverted
 	dw !OWW_InvertedOnly
 
 	dw $0034, $3BBE  ; pre-aga portal
@@ -674,13 +1299,166 @@ OverworldMapChangePointers:
 
 ;---------------------------------------------------------------------------------------------------
 
-.map15
-.map1E
-.map43
 .map5E
-.map7A
-.map80
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw .map5E_other
+
+	; non-bonk trees / cluster
+	dw !OWW_ArbTileCopy
+	dw $0000
+	dw $3954, $395A, $3C54|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0001
+	dw $3950, $3956, $3C50|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0002
+	dw $3952, $3958, $3C52|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $000B
+	dw $39D0, $39D6|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0011
+	dw $38D0, $38D6, $3BD0|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0012
+	dw $38D2, $38D8, $3BD2|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0013
+	dw $38D4, $38DA, $3BD4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0014
+	dw $3768, $3A4E, $3A54, $3B44|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0015
+	dw $376A, $3A50, $3A56, $3B46|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $001C
+	dw $37E8, $3ACE, $3AD4, $3BC4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $001D
+	dw $37EA, $3AD0, $3AD6, $3BC6|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0026
+	dw $3852, $3858, $3B52|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $004E
+	dw $3868, $3C44|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $004F
+	dw $386A, $3C46|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0076
+	dw $37EC, $3AD8, $3BC8|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0078
+	dw $3854, $385A|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $007C
+	dw $395C, $3C56|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $007E
+	dw $36EA, $3AC6|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $007F
+	dw $36EC, $3AC8|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0082
+	dw $39DA, $3CD4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $0089
+	dw $37E6, $3ACC, $3BC2|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00A8
+	dw $376C, $3A58, $3B48|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00AE
+	dw $36E6, $39CC, $3AC2|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00AF
+	dw $36E8, $39CE, $3AC4|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00B0
+	dw $3766, $3A4C, $3B42|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00B6
+	dw $3850, $3856|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00BE
+	dw $394E, $3C4E|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00D9
+	dw $386C, $3B58, $3C48|!OWW_STOP
+	dw !OWW_ArbTileCopy
+	dw $00F1
+	dw $3866, $3B4C, $3C42|!OWW_STOP
+	dw $0006, $3B4E
+	dw $0007, $3B50
+	dw $0009, $3B54
+	dw $000A, $39D4
+	dw $000C, $39D2
+	dw $000D, $39D8
+	dw $0016, $3A52
+	dw $001E, $3AD2
+	dw $0025, $3CD2
+	dw $0031, $3B56
+	dw $0079, $385C
+	dw $007B, $38DC
+	dw $0083, $3CD0
+	dw $0094, $3BD6
+	dw $00B5, $384E
+	dw $00B9, $38CE
+	dw $00DE, $3BCE
+
+	; bonk tree (green when collected)
+	dw !OWW_SkipIfNotFlagSet
+		dl OverworldEventDataWRAM+$5E
+		db $10
+		dw .map5E_other
+
+	%OWW_GreenTree($375E)
+
+.map5E_other
 	dw !OWW_CustomCommand, Overworld_OtherTileChanges
+
+	dw !OWW_END
+
+;---------------------------------------------------------------------------------------------------
+
+.map6E
+	; bonk trees
+	dw !OWW_SkipIfNotFlagSet
+		dl OWFlags+1
+		db !FLAG_OW_BONKDROP
+		dw ReliableOWWSentinel
+
+	; tree 2
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$6E
+		db $10
+		dw .map6E_tree3
+
+	%OWW_BonkTree($2396)
+
+.map6E_tree3
+	; tree 3
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$6E
+		db $08
+		dw .map6E_tree4
+
+	%OWW_BonkTree($241E)
+
+.map6E_tree4
+	; tree 4
+	dw !OWW_SkipIfFlagSet
+		dl OverworldEventDataWRAM+$6E
+		db $04
+		dw ReliableOWWSentinel
+
+	%OWW_BonkTree($24A6)
 
 	dw !OWW_END
 
