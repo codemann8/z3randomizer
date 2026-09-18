@@ -198,14 +198,18 @@ DecompressAllItemGraphics:
 
 	STA.l $4200 ; already 0 from the LDA above
 
+	; $7E06FA: 0 = 3bpp uses colors 8-15, 1 = colors 0-7
+	; Must be long-addressed. Convert runs with DB = gfx ROM or $7F.
+	STA.l $7E06FA
 	LDX.b #$5D+$73 : JSR AddGfxSheetToBigBuffer
 	LDX.b #$5C+$73 : JSR AddGfxSheetToBigBuffer
 	LDX.b #$5B+$73 : JSR AddGfxSheetToBigBuffer
 	LDX.b #$5A+$73 : JSR AddGfxSheetToBigBuffer
 	JSR AddCherryPickGfxToBigBuffer
-	LDX.b #$01 : STX.w $06FA
+	LDA.b #$01 : STA.l $7E06FA
 	LDX.b #$06+$73 : JSR AddGfxSheetToBigBuffer
 	LDX.b #$07+$73 : JSR AddGfxSheetToBigBuffer
+	LDA.b #$00 : STA.l $7E06FA
 
 	REP #$30
 	PLX
@@ -485,6 +489,21 @@ FastSpriteDecomp:
 ; More macros, because lazy
 ;===================================================================================================
 
+; $7E06FA = 1: force plane 3 to 0 (colors 0-7)
+; $7E06FA = 0: leave plane 3 from the 3bpp expand (colors 8-15)
+macro Apply3BPPColorHalf()
+	PHA
+	LDA.l $7E06FA
+	AND.w #$00FF
+	BNE ?lower
+		PLA
+		BRA ?store
+	?lower
+		PLA
+		AND.w #$00FF
+	?store
+endmacro
+
 macro DoPlanesA(offset)
 	LDA.w DecompBuffer2+<offset>+<offset>,Y
 	STA.w BigDecompressionBuffer+<offset>+<offset>,X
@@ -499,11 +518,7 @@ macro DoPlanesA(offset)
 
 	XBA
 	ORA.b Decomp3BPPScratch
-	PHY
-		LDY.w $06FA : BEQ +
-			AND.w #$00FF ; idk why this line works but some sheets we pull in aren't correct without it
-		+
-	PLY
+	%Apply3BPPColorHalf()
 	STA.w BigDecompressionBuffer+$10+<offset>+<offset>,X
 
 endmacro
@@ -527,11 +542,7 @@ macro DoIndirectPlanesA(offset)
 
 	XBA
 	ORA.b Decomp3BPPScratch
-	PHY
-		LDY.w $06FA : BEQ +
-			AND.w #$00FF ; idk why this line works but some sheets we pull in aren't correct without it
-		+
-	PLY
+	%Apply3BPPColorHalf()
 	STA.l BigDecompressionBuffer+$10+<offset>+<offset>,X
 
 endmacro
@@ -641,7 +652,7 @@ AddCherryPickGfxToBigBuffer:
 	; this is mostly to load and rearrange follower gfx to save on space
 	; assumes DecompBufferOffset left off at $A000 (#BigDecompressionBuffer+$2000)
 	; adjustments will be needed if anything prior to this changes
-	LDX.b #$01 : STX.w $06FA
+	LDA.b #$01 : STA.l $7E06FA ; force plane 3 to 0 (colors 0-7)
 	LDX.b #$35+$73 : JSR AddGfxSheetToBigBuffer
 	LDX.b #$55+$73 : JSR AddGfxSheetToBigBuffer
 		REP #$30
@@ -680,7 +691,7 @@ AddCherryPickGfxToBigBuffer:
 			LDA.b DecompBufferOffset : SEC : SBC.w #$0800 : STA.b DecompBufferOffset
 			SEP #$30
 	endif
+	LDA.b #$00 : STA.l $7E06FA
 
-	STZ.w $06FA
 	RTS
 
